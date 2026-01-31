@@ -17,7 +17,7 @@ export function GraphToolbar({
   onExportPng,
 }: GraphToolbarProps) {
   return (
-    <div className="absolute top-4 right-4 z-10 flex gap-1 rounded-lg border bg-background p-1 shadow-sm">
+    <div className="absolute bottom-4 right-4 z-10 flex gap-1 rounded-lg border bg-background p-1 shadow-sm">
       <Button variant="ghost" size="icon" onClick={onZoomIn} title="Zoom in">
         <ZoomIn className="h-4 w-4" />
       </Button>
