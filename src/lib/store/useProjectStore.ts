@@ -84,9 +84,7 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
       },
 
       applyAIResponse: (response) => {
-        console.log('DEBUG applyAIResponse: Received response:', JSON.stringify(response, null, 2))
         const state = get()
-        console.log('DEBUG applyAIResponse: Current nodes count:', state.nodes.length)
 
         let newNodes = [...state.nodes]
         let newEdges = [...state.edges]
@@ -164,8 +162,6 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
           }
         }
 
-        console.log('DEBUG applyAIResponse: Setting new nodes:', newNodes.length)
-        console.log('DEBUG applyAIResponse: New nodes:', JSON.stringify(newNodes, null, 2))
         set({ nodes: newNodes, edges: newEdges, gaps: newGaps })
       },
 

@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 import { useSettingsStore } from '@/lib/store/useSettingsStore'
+import { getLayoutedElements } from '@/lib/utils/graphLayout'
 import type { Message } from '@/types/database.types'
 
 export function useChatLogic() {
@@ -13,6 +14,7 @@ export function useChatLogic() {
     gaps,
     addMessage,
     applyAIResponse,
+    updateNodePosition,
     setIsSending,
     setError,
   } = useProjectStore()
@@ -85,10 +87,6 @@ export function useChatLogic() {
           throw new Error(`AI-Fehler: ${fnError.message}`)
         }
 
-        // Debug: Log raw API response
-        console.log('DEBUG: Raw API response:', JSON.stringify(data, null, 2))
-
-        // Use data directly, with fallbacks for missing fields
         const aiResponse = {
           message: data.message || '',
           nodes: Array.isArray(data.nodes) ? data.nodes : [],
@@ -98,11 +96,6 @@ export function useChatLogic() {
           removedEdgeIds: Array.isArray(data.removedEdgeIds) ? data.removedEdgeIds : [],
           suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
         }
-
-        // Debug: Log parsed response
-        console.log('DEBUG: Parsed aiResponse:', JSON.stringify(aiResponse, null, 2))
-        console.log('DEBUG: Nodes count:', aiResponse.nodes.length)
-        console.log('DEBUG: Edges count:', aiResponse.edges.length)
 
         const assistantMessage: Message = {
           id: crypto.randomUUID(),
@@ -122,16 +115,38 @@ export function useChatLogic() {
 
         applyAIResponse(aiResponse)
 
+        // Auto-layout when new nodes are added
+        if (aiResponse.nodes.length > 0) {
+          // Get fresh state after applyAIResponse
+          const freshState = useProjectStore.getState()
+          const { nodes: layoutedNodes } = getLayoutedElements(
+            freshState.nodes,
+            freshState.edges,
+            'TB'
+          )
+          // Update positions
+          for (const node of layoutedNodes) {
+            updateNodePosition(node.id, node.position)
+          }
+        }
+
+        // Save snapshot with fresh state
+        const freshState = useProjectStore.getState()
         const graphData = {
-          nodes: [...nodes, ...(aiResponse.nodes || [])].map((n) => ({
+          nodes: freshState.nodes.map((n) => ({
             id: n.id,
             type: n.type,
-            label: 'data' in n ? (n.data as { label: string }).label : n.label,
-            description: 'data' in n ? (n.data as { description?: string }).description : n.description,
-            position: 'position' in n ? n.position : undefined,
+            label: n.data.label,
+            description: n.data.description,
+            position: n.position,
           })),
-          edges: [...edges, ...(aiResponse.edges || [])],
-          gaps: [...gaps, ...(aiResponse.gaps || [])],
+          edges: freshState.edges.map((e) => ({
+            id: e.id,
+            source: e.source,
+            target: e.target,
+            label: e.label,
+          })),
+          gaps: freshState.gaps,
         }
 
         await supabase.from('architecture_snapshots').insert({
@@ -155,7 +170,7 @@ export function useChatLogic() {
         setIsSending(false)
       }
     },
-    [currentProject, messages, nodes, edges, gaps, addMessage, applyAIResponse, setIsSending, setError]
+    [currentProject, messages, nodes, edges, gaps, addMessage, applyAIResponse, updateNodePosition, setIsSending, setError, aiModel]
   )
 
   return { sendMessage }
