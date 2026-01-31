@@ -1,4 +1,4 @@
-import { LogOut, Menu, Plus, FolderOpen } from 'lucide-react'
+import { LogOut, Menu, Plus, FolderOpen, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 
@@ -6,11 +6,12 @@ interface HeaderProps {
   onMenuToggle: () => void
   onNewProject: () => void
   onOpenProjects: () => void
+  onSettings: () => void
   onLogout: () => void
   userName?: string
 }
 
-export function Header({ onMenuToggle, onNewProject, onOpenProjects, onLogout, userName }: HeaderProps) {
+export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings, onLogout, userName }: HeaderProps) {
   const { currentProject } = useProjectStore()
 
   return (
@@ -40,6 +41,9 @@ export function Header({ onMenuToggle, onNewProject, onOpenProjects, onLogout, u
         <Button variant="ghost" size="sm" onClick={onOpenProjects}>
           <FolderOpen className="mr-2 h-4 w-4" />
           <span className="hidden sm:inline">Projekte</span>
+        </Button>
+        <Button variant="ghost" size="icon" onClick={onSettings} title="Einstellungen">
+          <Settings className="h-4 w-4" />
         </Button>
         {userName && (
           <span className="text-sm text-muted-foreground hidden md:inline">{userName}</span>

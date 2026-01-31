@@ -7,6 +7,7 @@ import { SplitViewLayout } from '@/components/layout/SplitViewLayout'
 import { GraphCanvas } from '@/components/features/graph/GraphCanvas'
 import { ChatInterface } from '@/components/features/chat/ChatInterface'
 import { PrdExportDialog } from '@/components/features/export/PrdExportDialog'
+import { SettingsDialog } from '@/components/features/settings/SettingsDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -28,6 +29,7 @@ export default function App() {
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false)
   const [showProjectsDialog, setShowProjectsDialog] = useState(false)
   const [showExportDialog, setShowExportDialog] = useState(false)
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false)
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectDescription, setNewProjectDescription] = useState('')
 
@@ -68,6 +70,7 @@ export default function App() {
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         onNewProject={() => setShowNewProjectDialog(true)}
         onOpenProjects={() => setShowProjectsDialog(true)}
+        onSettings={() => setShowSettingsDialog(true)}
         onLogout={signOut}
         userName={user?.email}
       />
@@ -231,6 +234,7 @@ export default function App() {
       </Dialog>
 
       <PrdExportDialog open={showExportDialog} onOpenChange={setShowExportDialog} />
+      <SettingsDialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog} />
     </div>
   )
 }

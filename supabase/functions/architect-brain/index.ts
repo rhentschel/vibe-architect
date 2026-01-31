@@ -9,7 +9,15 @@ interface RequestBody {
     edges: unknown[]
     gaps: unknown[]
   }
+  model?: string
 }
+
+const DEFAULT_MODEL = 'claude-sonnet-4-5-20241022'
+const ALLOWED_MODELS = [
+  'claude-sonnet-4-20250514',
+  'claude-sonnet-4-5-20241022',
+  'claude-opus-4-5-20251101',
+]
 
 const SYSTEM_PROMPT = `You are an expert software architect AI assistant called VibeArchitect.
 Your role is to help users design and visualize software architectures through conversation.
@@ -79,7 +87,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { messages, currentGraph } = (await req.json()) as RequestBody
+    const { messages, currentGraph, model: requestedModel } = (await req.json()) as RequestBody
+
+    // Validate and use requested model, fallback to default
+    const model = requestedModel && ALLOWED_MODELS.includes(requestedModel)
+      ? requestedModel
+      : DEFAULT_MODEL
 
     const contextMessage = currentGraph.nodes.length > 0
       ? `\n\nCurrent architecture state:\n${JSON.stringify(currentGraph, null, 2)}`
@@ -100,7 +113,7 @@ Deno.serve(async (req) => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model,
         max_tokens: 4096,
         system: SYSTEM_PROMPT,
         messages: anthropicMessages,

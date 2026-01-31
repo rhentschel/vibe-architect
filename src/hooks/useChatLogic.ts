@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useProjectStore } from '@/lib/store/useProjectStore'
+import { useSettingsStore } from '@/lib/store/useSettingsStore'
 import type { Message } from '@/types/database.types'
 
 export function useChatLogic() {
@@ -15,6 +16,8 @@ export function useChatLogic() {
     setIsSending,
     setError,
   } = useProjectStore()
+
+  const { aiModel } = useSettingsStore()
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -74,6 +77,7 @@ export function useChatLogic() {
           body: {
             messages: chatHistory,
             currentGraph,
+            model: aiModel,
           },
         })
 
