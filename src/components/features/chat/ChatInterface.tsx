@@ -18,7 +18,7 @@ export function ChatInterface() {
 
   if (!currentProject) {
     return (
-      <div className="flex h-full items-center justify-center bg-background p-8">
+      <div className="flex flex-1 items-center justify-center bg-background p-8">
         <div className="text-center">
           <h2 className="text-lg font-semibold">Willkommen bei VibeArchitect</h2>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -30,7 +30,7 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex flex-1 min-h-0 flex-col bg-background">
       <div className="border-b px-4 py-3">
         <h2 className="font-semibold">{currentProject.name}</h2>
         {currentProject.description && (
