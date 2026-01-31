@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
 import ReactFlow, {
   Background,
   Controls,
@@ -7,6 +7,7 @@ import ReactFlow, {
   type OnNodesChange,
   type OnEdgesChange,
   type OnConnect,
+  type OnSelectionChangeParams,
   type Connection,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
@@ -19,7 +20,9 @@ import { getLayoutedElements } from '@/lib/utils/graphLayout'
 export function GraphCanvas() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const { zoomIn, zoomOut, fitView } = useReactFlow()
-  const { nodes, edges, updateNodePosition, addNode, addEdge } = useProjectStore()
+  const { nodes, edges, updateNodePosition, addNode, addEdge, deleteNode, deleteEdge } = useProjectStore()
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
@@ -44,6 +47,37 @@ export function GraphCanvas() {
     },
     [addEdge]
   )
+
+  const onSelectionChange = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
+    setSelectedNodeId(selectedNodes.length > 0 ? selectedNodes[0].id : null)
+    setSelectedEdgeId(selectedEdges.length > 0 ? selectedEdges[0].id : null)
+  }, [])
+
+  const handleDelete = useCallback(() => {
+    if (selectedNodeId) {
+      deleteNode(selectedNodeId)
+      setSelectedNodeId(null)
+    } else if (selectedEdgeId) {
+      deleteEdge(selectedEdgeId)
+      setSelectedEdgeId(null)
+    }
+  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge])
+
+  // Keyboard delete handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedNodeId || selectedEdgeId)) {
+        // Don't delete if user is typing in an input
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+          return
+        }
+        e.preventDefault()
+        handleDelete()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedNodeId, selectedEdgeId, handleDelete])
 
   const handleAddNode = useCallback(
     (type: 'entity' | 'process') => {
@@ -98,12 +132,14 @@ export function GraphCanvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.1}
         maxZoom={2}
         connectOnClick={false}
+        deleteKeyCode={null}
         defaultEdgeOptions={{
           type: 'smoothstep',
           animated: true,
@@ -126,6 +162,8 @@ export function GraphCanvas() {
         onAutoLayout={handleAutoLayout}
         onExportPng={handleExportPng}
         onAddNode={handleAddNode}
+        onDelete={handleDelete}
+        hasSelection={!!(selectedNodeId || selectedEdgeId)}
       />
 
       {nodes.length === 0 && (

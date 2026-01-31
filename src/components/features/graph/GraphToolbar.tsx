@@ -1,4 +1,4 @@
-import { ZoomIn, ZoomOut, Maximize2, LayoutGrid, Download, Database, Cog, Plus } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, LayoutGrid, Download, Database, Cog, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -14,6 +14,8 @@ interface GraphToolbarProps {
   onAutoLayout: () => void
   onExportPng: () => void
   onAddNode?: (type: 'entity' | 'process') => void
+  onDelete?: () => void
+  hasSelection?: boolean
 }
 
 export function GraphToolbar({
@@ -23,6 +25,8 @@ export function GraphToolbar({
   onAutoLayout,
   onExportPng,
   onAddNode,
+  onDelete,
+  hasSelection,
 }: GraphToolbarProps) {
   return (
     <div className="absolute bottom-4 right-4 z-10 flex gap-0.5 rounded-xl border border-border/50 bg-card/90 backdrop-blur-sm p-1.5 shadow-md">
@@ -64,6 +68,20 @@ export function GraphToolbar({
       <Button variant="ghost" size="icon" onClick={onExportPng} title="Export PNG">
         <Download className="h-4 w-4" />
       </Button>
+      {hasSelection && onDelete && (
+        <>
+          <div className="w-px bg-border" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onDelete}
+            title="Löschen (Delete/Backspace)"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </>
+      )}
     </div>
   )
 }
