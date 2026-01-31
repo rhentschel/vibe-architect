@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps } from 'reactflow'
-import { AlertTriangle, HelpCircle } from 'lucide-react'
+import { AlertTriangle, HelpCircle, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 interface GapNodeData {
@@ -14,30 +14,34 @@ export const GapNode = memo(({ data, selected }: NodeProps<GapNodeData>) => {
   const getSeverityStyles = () => {
     if (data.resolved) {
       return {
-        border: 'border-gray-300 border-dashed',
-        bg: 'bg-gray-50',
-        icon: 'text-gray-400',
+        border: 'border-muted border-dashed',
+        bg: 'bg-muted/30',
+        iconBg: 'bg-muted',
+        icon: 'text-muted-foreground',
       }
     }
 
     switch (data.severity) {
       case 'high':
         return {
-          border: 'border-red-400',
-          bg: 'bg-red-50',
-          icon: 'text-red-500',
+          border: 'border-destructive/40',
+          bg: 'bg-destructive/5',
+          iconBg: 'bg-destructive/10',
+          icon: 'text-destructive',
         }
       case 'medium':
         return {
-          border: 'border-yellow-400',
-          bg: 'bg-yellow-50',
-          icon: 'text-yellow-500',
+          border: 'border-amber-400/50',
+          bg: 'bg-amber-50',
+          iconBg: 'bg-amber-100',
+          icon: 'text-amber-600',
         }
       default:
         return {
-          border: 'border-orange-300',
+          border: 'border-orange-300/50',
           bg: 'bg-orange-50',
-          icon: 'text-orange-400',
+          iconBg: 'bg-orange-100',
+          icon: 'text-orange-500',
         }
     }
   }
@@ -47,34 +51,36 @@ export const GapNode = memo(({ data, selected }: NodeProps<GapNodeData>) => {
   return (
     <div
       className={cn(
-        'rounded-lg border-2 px-4 py-3 shadow-sm min-w-[140px]',
-        'transition-all duration-200',
+        'group rounded-xl border px-4 py-3 min-w-[160px] max-w-[220px]',
+        'shadow-sm hover:shadow-md transition-all duration-200',
         styles.border,
         styles.bg,
-        selected && 'shadow-md ring-2 ring-primary ring-offset-2',
-        data.resolved && 'opacity-60'
+        selected && 'shadow-md ring-2 ring-primary/20',
+        data.resolved && 'opacity-70'
       )}
     >
       <Handle
         type="target"
         position={Position.Top}
-        className="!bg-orange-400 !w-2 !h-2"
+        className="!bg-amber-400 !border-2 !border-card !w-3 !h-3 !-top-1.5"
       />
 
-      <div className="flex items-center gap-2">
-        <div className={cn('flex-shrink-0', styles.icon)}>
-          {data.severity === 'high' ? (
-            <AlertTriangle className="h-5 w-5" />
+      <div className="flex items-start gap-3">
+        <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg shrink-0', styles.iconBg)}>
+          {data.resolved ? (
+            <CheckCircle2 className={cn('h-4 w-4', styles.icon)} />
+          ) : data.severity === 'high' ? (
+            <AlertTriangle className={cn('h-4 w-4', styles.icon)} />
           ) : (
-            <HelpCircle className="h-5 w-5" />
+            <HelpCircle className={cn('h-4 w-4', styles.icon)} />
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className={cn('font-medium text-sm truncate', data.resolved && 'line-through')}>
+        <div className="flex-1 min-w-0 pt-0.5">
+          <div className={cn('font-display font-medium text-sm leading-tight truncate', data.resolved && 'line-through opacity-60')}>
             {data.label}
           </div>
           {data.description && (
-            <div className="text-xs text-muted-foreground truncate">{data.description}</div>
+            <div className="text-xs text-muted-foreground leading-snug mt-1 line-clamp-2">{data.description}</div>
           )}
         </div>
       </div>
@@ -82,7 +88,7 @@ export const GapNode = memo(({ data, selected }: NodeProps<GapNodeData>) => {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!bg-orange-400 !w-2 !h-2"
+        className="!bg-amber-400 !border-2 !border-card !w-3 !h-3 !-bottom-1.5"
       />
     </div>
   )

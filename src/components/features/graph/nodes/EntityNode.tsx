@@ -13,38 +13,40 @@ export const EntityNode = memo(({ data, selected }: NodeProps<EntityNodeData>) =
   const getIcon = () => {
     switch (data.subtype) {
       case 'database':
-        return <Database className="h-4 w-4" />
+        return <Database className="h-3.5 w-3.5" />
       case 'api':
-        return <Cloud className="h-4 w-4" />
+        return <Cloud className="h-3.5 w-3.5" />
       case 'user':
-        return <Users className="h-4 w-4" />
+        return <Users className="h-3.5 w-3.5" />
       default:
-        return <Server className="h-4 w-4" />
+        return <Server className="h-3.5 w-3.5" />
     }
   }
 
   return (
     <div
       className={cn(
-        'rounded-lg border-2 bg-background px-4 py-3 shadow-sm min-w-[140px]',
-        'transition-all duration-200',
-        selected ? 'border-primary shadow-md' : 'border-blue-400'
+        'group rounded-xl border bg-card px-4 py-3 min-w-[160px] max-w-[220px]',
+        'shadow-sm hover:shadow-md transition-all duration-200',
+        selected
+          ? 'border-primary/50 shadow-md ring-2 ring-primary/20'
+          : 'border-border/60 hover:border-primary/30'
       )}
     >
       <Handle
         type="target"
         position={Position.Top}
-        className="!bg-blue-400 !w-2 !h-2"
+        className="!bg-primary/60 !border-2 !border-card !w-3 !h-3 !-top-1.5"
       />
 
-      <div className="flex items-center gap-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-100 text-blue-600">
+      <div className="flex items-start gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground shrink-0">
           {getIcon()}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm truncate">{data.label}</div>
+        <div className="flex-1 min-w-0 pt-0.5">
+          <div className="font-display font-medium text-sm leading-tight truncate">{data.label}</div>
           {data.description && (
-            <div className="text-xs text-muted-foreground truncate">{data.description}</div>
+            <div className="text-xs text-muted-foreground leading-snug mt-1 line-clamp-2">{data.description}</div>
           )}
         </div>
       </div>
@@ -52,7 +54,7 @@ export const EntityNode = memo(({ data, selected }: NodeProps<EntityNodeData>) =
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!bg-blue-400 !w-2 !h-2"
+        className="!bg-primary/60 !border-2 !border-card !w-3 !h-3 !-bottom-1.5"
       />
     </div>
   )

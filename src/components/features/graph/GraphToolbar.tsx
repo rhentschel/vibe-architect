@@ -25,7 +25,7 @@ export function GraphToolbar({
   onAddNode,
 }: GraphToolbarProps) {
   return (
-    <div className="absolute bottom-4 right-4 z-10 flex gap-1 rounded-lg border bg-background p-1 shadow-sm">
+    <div className="absolute bottom-4 right-4 z-10 flex gap-0.5 rounded-xl border border-border/50 bg-card/90 backdrop-blur-sm p-1.5 shadow-md">
       {onAddNode && (
         <>
           <DropdownMenu>
