@@ -1,4 +1,5 @@
-import { ZoomIn, ZoomOut, Maximize2, LayoutGrid, Download, Database, Cog, Plus, Trash2 } from 'lucide-react'
+import { useState, useRef, useCallback } from 'react'
+import { ZoomIn, ZoomOut, Maximize2, LayoutGrid, Download, Database, Cog, Plus, Trash2, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -28,8 +29,67 @@ export function GraphToolbar({
   onDelete,
   hasSelection,
 }: GraphToolbarProps) {
+  const [position, setPosition] = useState({ x: 16, y: 16 })
+  const [isDragging, setIsDragging] = useState(false)
+  const dragRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(null)
+  const toolbarRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: position.x,
+      initialY: position.y,
+    }
+  }, [position])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging || !dragRef.current || !toolbarRef.current) return
+
+    const parent = toolbarRef.current.parentElement
+    if (!parent) return
+
+    const deltaX = e.clientX - dragRef.current.startX
+    const deltaY = e.clientY - dragRef.current.startY
+
+    const newX = dragRef.current.initialX - deltaX
+    const newY = dragRef.current.initialY - deltaY
+
+    const parentRect = parent.getBoundingClientRect()
+    const toolbarRect = toolbarRef.current.getBoundingClientRect()
+
+    const maxX = parentRect.width - toolbarRect.width - 8
+    const maxY = parentRect.height - toolbarRect.height - 8
+
+    setPosition({
+      x: Math.max(8, Math.min(newX, maxX)),
+      y: Math.max(8, Math.min(newY, maxY)),
+    })
+  }, [isDragging])
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+    dragRef.current = null
+  }, [])
+
   return (
-    <div className="absolute bottom-4 right-4 z-10 flex gap-0.5 rounded-xl border border-border/50 bg-card/90 backdrop-blur-sm p-1.5 shadow-md">
+    <div
+      ref={toolbarRef}
+      className="absolute z-10 flex gap-0.5 rounded-xl border border-border/50 bg-card/90 backdrop-blur-sm p-1.5 shadow-md select-none"
+      style={{ bottom: position.y, right: position.x }}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
+      <div
+        className="flex items-center justify-center w-6 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+        onMouseDown={handleMouseDown}
+      >
+        <GripVertical className="h-4 w-4" />
+      </div>
+      <div className="w-px bg-border" />
       {onAddNode && (
         <>
           <DropdownMenu>
