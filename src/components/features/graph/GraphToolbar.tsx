@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from 'react'
-import { ZoomIn, ZoomOut, Maximize2, LayoutGrid, Download, Database, Cog, Plus, Trash2, GripVertical } from 'lucide-react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { ZoomIn, ZoomOut, Maximize2, LayoutGrid, Download, Database, Cog, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -31,70 +31,80 @@ export function GraphToolbar({
 }: GraphToolbarProps) {
   const [position, setPosition] = useState({ x: 16, y: 16 })
   const [isDragging, setIsDragging] = useState(false)
-  const dragRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(null)
+  const dragStartRef = useRef<{ mouseX: number; mouseY: number; posX: number; posY: number } | null>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Don't start drag if clicking on a button or interactive element
+    const target = e.target as HTMLElement
+    if (target.closest('button') || target.closest('[role="menuitem"]')) {
+      return
+    }
+
     e.preventDefault()
     setIsDragging(true)
-    dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      initialX: position.x,
-      initialY: position.y,
+    dragStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      posX: position.x,
+      posY: position.y,
     }
   }, [position])
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging || !dragRef.current || !toolbarRef.current) return
+  useEffect(() => {
+    if (!isDragging) return
 
-    const parent = toolbarRef.current.parentElement
-    if (!parent) return
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragStartRef.current || !toolbarRef.current) return
 
-    const deltaX = e.clientX - dragRef.current.startX
-    const deltaY = e.clientY - dragRef.current.startY
+      const parent = toolbarRef.current.parentElement
+      if (!parent) return
 
-    const newX = dragRef.current.initialX - deltaX
-    const newY = dragRef.current.initialY - deltaY
+      const deltaX = e.clientX - dragStartRef.current.mouseX
+      const deltaY = e.clientY - dragStartRef.current.mouseY
 
-    const parentRect = parent.getBoundingClientRect()
-    const toolbarRect = toolbarRef.current.getBoundingClientRect()
+      // Invert because we're using right/bottom positioning
+      const newX = dragStartRef.current.posX - deltaX
+      const newY = dragStartRef.current.posY - deltaY
 
-    const maxX = parentRect.width - toolbarRect.width - 8
-    const maxY = parentRect.height - toolbarRect.height - 8
+      const parentRect = parent.getBoundingClientRect()
+      const toolbarRect = toolbarRef.current.getBoundingClientRect()
 
-    setPosition({
-      x: Math.max(8, Math.min(newX, maxX)),
-      y: Math.max(8, Math.min(newY, maxY)),
-    })
+      const maxX = parentRect.width - toolbarRect.width - 8
+      const maxY = parentRect.height - toolbarRect.height - 8
+
+      setPosition({
+        x: Math.max(8, Math.min(newX, maxX)),
+        y: Math.max(8, Math.min(newY, maxY)),
+      })
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+      dragStartRef.current = null
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
   }, [isDragging])
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false)
-    dragRef.current = null
-  }, [])
 
   return (
     <div
       ref={toolbarRef}
-      className="absolute z-10 flex gap-0.5 rounded-xl border border-border/50 bg-card/90 backdrop-blur-sm p-1.5 shadow-md select-none"
+      className="absolute z-10 flex gap-0.5 rounded-xl border border-border/50 bg-card/90 backdrop-blur-sm p-1.5 shadow-md select-none cursor-move"
       style={{ bottom: position.y, right: position.x }}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseDown={handleMouseDown}
     >
-      <div
-        className="flex items-center justify-center w-6 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
-        onMouseDown={handleMouseDown}
-      >
-        <GripVertical className="h-4 w-4" />
-      </div>
-      <div className="w-px bg-border" />
       {onAddNode && (
         <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" title="Node hinzufügen">
+              <Button variant="ghost" size="icon" title="Node hinzufügen" className="cursor-pointer">
                 <Plus className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -112,20 +122,20 @@ export function GraphToolbar({
           <div className="w-px bg-border" />
         </>
       )}
-      <Button variant="ghost" size="icon" onClick={onZoomIn} title="Zoom in">
+      <Button variant="ghost" size="icon" onClick={onZoomIn} title="Zoom in" className="cursor-pointer">
         <ZoomIn className="h-4 w-4" />
       </Button>
-      <Button variant="ghost" size="icon" onClick={onZoomOut} title="Zoom out">
+      <Button variant="ghost" size="icon" onClick={onZoomOut} title="Zoom out" className="cursor-pointer">
         <ZoomOut className="h-4 w-4" />
       </Button>
-      <Button variant="ghost" size="icon" onClick={onFitView} title="Fit view">
+      <Button variant="ghost" size="icon" onClick={onFitView} title="Fit view" className="cursor-pointer">
         <Maximize2 className="h-4 w-4" />
       </Button>
       <div className="w-px bg-border" />
-      <Button variant="ghost" size="icon" onClick={onAutoLayout} title="Auto layout">
+      <Button variant="ghost" size="icon" onClick={onAutoLayout} title="Auto layout" className="cursor-pointer">
         <LayoutGrid className="h-4 w-4" />
       </Button>
-      <Button variant="ghost" size="icon" onClick={onExportPng} title="Export PNG">
+      <Button variant="ghost" size="icon" onClick={onExportPng} title="Export PNG" className="cursor-pointer">
         <Download className="h-4 w-4" />
       </Button>
       {onDelete && (
@@ -137,7 +147,7 @@ export function GraphToolbar({
             onClick={onDelete}
             disabled={!hasSelection}
             title={hasSelection ? "Löschen (Delete/Backspace)" : "Node auswählen zum Löschen"}
-            className={hasSelection ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground"}
+            className={hasSelection ? "cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10" : "cursor-pointer text-muted-foreground"}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
