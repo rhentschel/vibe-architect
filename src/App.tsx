@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ReactFlowProvider } from 'reactflow'
-import { FileText, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { SplitViewLayout } from '@/components/layout/SplitViewLayout'
@@ -33,7 +33,7 @@ export default function App() {
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectDescription, setNewProjectDescription] = useState('')
 
-  const { currentProject, nodes } = useProjectStore()
+  const { currentProject } = useProjectStore()
   const { data: projects = [], isLoading: projectsLoading } = useProjects(user?.id)
   const createProject = useCreateProject()
   const loadProject = useLoadProject()
@@ -71,6 +71,7 @@ export default function App() {
         onNewProject={() => setShowNewProjectDialog(true)}
         onOpenProjects={() => setShowProjectsDialog(true)}
         onSettings={() => setShowSettingsDialog(true)}
+        onExportPRD={() => setShowExportDialog(true)}
         onLogout={signOut}
         userName={user?.email}
       />
@@ -84,22 +85,7 @@ export default function App() {
               <SplitViewLayout
                 leftPanel={<GraphCanvas />}
                 rightPanel={
-                  <div className="flex h-full flex-col">
-                    <ChatInterface />
-                    {nodes.length > 0 && (
-                      <div className="border-t p-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => setShowExportDialog(true)}
-                        >
-                          <FileText className="mr-2 h-4 w-4" />
-                          PRD exportieren
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                  <ChatInterface />
                 }
               />
             </ReactFlowProvider>
