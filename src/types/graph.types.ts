@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const GraphNodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['entity', 'process', 'gap']),
+  type: z.string(),
   label: z.string(),
   description: z.string().optional(),
   position: z.object({
@@ -45,7 +45,7 @@ export type AIArchitectResponse = z.infer<typeof AIArchitectResponseSchema>
 
 export interface ReactFlowNode {
   id: string
-  type: 'entity' | 'process' | 'gap'
+  type: string
   position: { x: number; y: number }
   data: {
     label: string
