@@ -11,7 +11,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['@dagrejs/dagre', '@dagrejs/graphlib'],
+    include: ['dagre'],
   },
   build: {
     commonjsOptions: {

@@ -1,4 +1,4 @@
-import dagre from '@dagrejs/dagre'
+import dagre from 'dagre'
 import type { ReactFlowNode, ReactFlowEdge } from '@/types/graph.types'
 
 const NODE_WIDTH = 180
