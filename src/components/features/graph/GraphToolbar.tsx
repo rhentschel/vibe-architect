@@ -1,5 +1,11 @@
-import { ZoomIn, ZoomOut, Maximize2, LayoutGrid, Download } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, LayoutGrid, Download, Database, Cog, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface GraphToolbarProps {
   onZoomIn: () => void
@@ -7,6 +13,7 @@ interface GraphToolbarProps {
   onFitView: () => void
   onAutoLayout: () => void
   onExportPng: () => void
+  onAddNode?: (type: 'entity' | 'process') => void
 }
 
 export function GraphToolbar({
@@ -15,9 +22,32 @@ export function GraphToolbar({
   onFitView,
   onAutoLayout,
   onExportPng,
+  onAddNode,
 }: GraphToolbarProps) {
   return (
     <div className="absolute bottom-4 right-4 z-10 flex gap-1 rounded-lg border bg-background p-1 shadow-sm">
+      {onAddNode && (
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" title="Node hinzufügen">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onAddNode('entity')}>
+                <Database className="mr-2 h-4 w-4" />
+                Entität (Daten/Service)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddNode('process')}>
+                <Cog className="mr-2 h-4 w-4" />
+                Prozess (Logik)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <div className="w-px bg-border" />
+        </>
+      )}
       <Button variant="ghost" size="icon" onClick={onZoomIn} title="Zoom in">
         <ZoomIn className="h-4 w-4" />
       </Button>

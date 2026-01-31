@@ -20,6 +20,11 @@ interface ProjectActions {
   addMessage: (message: Message) => void
   setGraph: (data: GraphData) => void
   applyAIResponse: (response: AIArchitectResponse) => void
+  addNode: (type: 'entity' | 'process', label?: string, description?: string) => void
+  updateNode: (nodeId: string, label: string, description?: string) => void
+  deleteNode: (nodeId: string) => void
+  addEdge: (source: string, target: string, label?: string) => void
+  deleteEdge: (edgeId: string) => void
   resolveGap: (gapId: string) => void
   updateNodePosition: (nodeId: string, position: { x: number; y: number }) => void
   setIsLoading: (loading: boolean) => void
@@ -164,6 +169,44 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
 
         set({ nodes: newNodes, edges: newEdges, gaps: newGaps })
       },
+
+      addNode: (type, label = 'Neuer Node', description = '') => set((state) => {
+        const newNode: ReactFlowNode = {
+          id: crypto.randomUUID(),
+          type,
+          position: { x: Math.random() * 300 + 100, y: Math.random() * 300 + 100 },
+          data: { label, description },
+        }
+        return { nodes: [...state.nodes, newNode] }
+      }),
+
+      updateNode: (nodeId, label, description) => set((state) => ({
+        nodes: state.nodes.map((node) =>
+          node.id === nodeId
+            ? { ...node, data: { ...node.data, label, description: description ?? node.data.description } }
+            : node
+        ),
+      })),
+
+      deleteNode: (nodeId) => set((state) => ({
+        nodes: state.nodes.filter((node) => node.id !== nodeId),
+        edges: state.edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
+      })),
+
+      addEdge: (source, target, label = '') => set((state) => {
+        const newEdge: ReactFlowEdge = {
+          id: `${source}-${target}-${crypto.randomUUID().slice(0, 8)}`,
+          source,
+          target,
+          label,
+          type: 'smoothstep',
+        }
+        return { edges: [...state.edges, newEdge] }
+      }),
+
+      deleteEdge: (edgeId) => set((state) => ({
+        edges: state.edges.filter((edge) => edge.id !== edgeId),
+      })),
 
       resolveGap: (gapId) => set((state) => ({
         gaps: state.gaps.map((gap) =>

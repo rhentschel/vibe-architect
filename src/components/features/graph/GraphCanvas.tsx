@@ -6,6 +6,8 @@ import ReactFlow, {
   useReactFlow,
   type OnNodesChange,
   type OnEdgesChange,
+  type OnConnect,
+  type Connection,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { toPng } from 'html-to-image'
@@ -17,7 +19,7 @@ import { getLayoutedElements } from '@/lib/utils/graphLayout'
 export function GraphCanvas() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const { zoomIn, zoomOut, fitView } = useReactFlow()
-  const { nodes, edges, updateNodePosition } = useProjectStore()
+  const { nodes, edges, updateNodePosition, addNode, addEdge } = useProjectStore()
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
@@ -33,6 +35,22 @@ export function GraphCanvas() {
   const onEdgesChange: OnEdgesChange = useCallback(() => {
     // Edges are managed by the store
   }, [])
+
+  const onConnect: OnConnect = useCallback(
+    (connection: Connection) => {
+      if (connection.source && connection.target) {
+        addEdge(connection.source, connection.target, '')
+      }
+    },
+    [addEdge]
+  )
+
+  const handleAddNode = useCallback(
+    (type: 'entity' | 'process') => {
+      addNode(type)
+    },
+    [addNode]
+  )
 
   const handleAutoLayout = useCallback(() => {
     const { nodes: layoutedNodes } = getLayoutedElements(
@@ -79,11 +97,13 @@ export function GraphCanvas() {
         edges={flowEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.1}
         maxZoom={2}
+        connectOnClick={false}
         defaultEdgeOptions={{
           type: 'smoothstep',
           animated: true,
@@ -105,6 +125,7 @@ export function GraphCanvas() {
         onFitView={() => fitView({ padding: 0.2 })}
         onAutoLayout={handleAutoLayout}
         onExportPng={handleExportPng}
+        onAddNode={handleAddNode}
       />
 
       {nodes.length === 0 && (
