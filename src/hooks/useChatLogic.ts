@@ -81,6 +81,9 @@ export function useChatLogic() {
           throw new Error(`AI-Fehler: ${fnError.message}`)
         }
 
+        // Debug: Log raw API response
+        console.log('DEBUG: Raw API response:', JSON.stringify(data, null, 2))
+
         // Use data directly, with fallbacks for missing fields
         const aiResponse = {
           message: data.message || '',
@@ -91,6 +94,11 @@ export function useChatLogic() {
           removedEdgeIds: Array.isArray(data.removedEdgeIds) ? data.removedEdgeIds : [],
           suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
         }
+
+        // Debug: Log parsed response
+        console.log('DEBUG: Parsed aiResponse:', JSON.stringify(aiResponse, null, 2))
+        console.log('DEBUG: Nodes count:', aiResponse.nodes.length)
+        console.log('DEBUG: Edges count:', aiResponse.edges.length)
 
         const assistantMessage: Message = {
           id: crypto.randomUUID(),
