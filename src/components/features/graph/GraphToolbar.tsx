@@ -128,15 +128,16 @@ export function GraphToolbar({
       <Button variant="ghost" size="icon" onClick={onExportPng} title="Export PNG">
         <Download className="h-4 w-4" />
       </Button>
-      {hasSelection && onDelete && (
+      {onDelete && (
         <>
           <div className="w-px bg-border" />
           <Button
             variant="ghost"
             size="icon"
             onClick={onDelete}
-            title="Löschen (Delete/Backspace)"
-            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            disabled={!hasSelection}
+            title={hasSelection ? "Löschen (Delete/Backspace)" : "Node auswählen zum Löschen"}
+            className={hasSelection ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground"}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
