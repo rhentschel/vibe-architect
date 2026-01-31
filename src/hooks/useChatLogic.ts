@@ -22,7 +22,9 @@ export function useChatLogic() {
   const { aiModel } = useSettingsStore()
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, fileContent?: string) => {
+      // Combine message with file content if provided
+      const fullContent = fileContent ? `${content}${fileContent}` : content
       if (!currentProject) {
         setError('Kein Projekt ausgewählt')
         return
@@ -31,33 +33,40 @@ export function useChatLogic() {
       setIsSending(true)
       setError(null)
 
+      // Display message shows only user text, not the full file content
       const userMessage: Message = {
         id: crypto.randomUUID(),
         project_id: currentProject.id,
         role: 'user',
-        content,
+        content: fileContent ? `${content}\n\n📎 Datei angehängt` : content,
         created_at: new Date().toISOString(),
       }
 
       addMessage(userMessage)
 
       try {
+        // Save the full content including file data to database
         const { error: saveError } = await supabase
           .from('messages')
           .insert({
             project_id: currentProject.id,
             role: 'user' as const,
-            content,
+            content: fullContent,
           } as never)
 
         if (saveError) {
           throw new Error(`Nachricht konnte nicht gespeichert werden: ${saveError.message}`)
         }
 
-        const chatHistory = [...messages, userMessage].map((m) => ({
+        // Build chat history - use fullContent for the current message to include file data
+        const chatHistory = messages.map((m) => ({
           role: m.role,
           content: m.content,
         }))
+        chatHistory.push({
+          role: 'user',
+          content: fullContent,
+        })
 
         const currentGraph = {
           nodes: nodes.map((n) => ({

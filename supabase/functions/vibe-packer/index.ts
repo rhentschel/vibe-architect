@@ -1,6 +1,6 @@
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')
 
 interface RequestBody {
   projectName: string
@@ -35,15 +35,16 @@ The PRD should include:
 
 Format the output as clean, professional Markdown.
 Use the conversation context to fill in details where the graph alone is insufficient.
-Be specific and actionable in recommendations.`
+Be specific and actionable in recommendations.
+Write in German (Deutsch) if the conversation is in German.`
 
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req)
   if (corsResponse) return corsResponse
 
-  if (!GEMINI_API_KEY) {
+  if (!ANTHROPIC_API_KEY) {
     return new Response(
-      JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
+      JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
@@ -55,9 +56,7 @@ Deno.serve(async (req) => {
       .map((m) => `${m.role}: ${m.content}`)
       .join('\n\n')
 
-    const prompt = `${SYSTEM_PROMPT}
-
-Project Name: ${projectName}
+    const userPrompt = `Project Name: ${projectName}
 Project Description: ${projectDescription || 'Not provided'}
 
 Architecture Graph:
@@ -75,28 +74,28 @@ ${conversationSummary}
 
 Generate the PRD now:`
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 8192,
-          },
-        }),
-      }
-    )
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8192,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    })
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
+      throw new Error(`Anthropic API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
-    const prdContent = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    const prdContent = data.content?.[0]?.text || ''
 
     return new Response(
       JSON.stringify({ prd: prdContent }),
