@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
-export type AIModel = 'claude-sonnet-4-20250514' | 'claude-sonnet-4-5-20241022' | 'claude-opus-4-5-20251101'
+export type AIModel = 'claude-sonnet-4-20250514' | 'claude-sonnet-4-5-20250929' | 'claude-opus-4-5-20251101'
 
 export const AI_MODELS: { id: AIModel; name: string; description: string }[] = [
   {
@@ -10,7 +10,7 @@ export const AI_MODELS: { id: AIModel; name: string; description: string }[] = [
     description: 'Schnell & effizient',
   },
   {
-    id: 'claude-sonnet-4-5-20241022',
+    id: 'claude-sonnet-4-5-20250929',
     name: 'Claude Sonnet 4.5',
     description: 'Ausgewogen - empfohlen',
   },
@@ -29,7 +29,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      aiModel: 'claude-sonnet-4-5-20241022',
+      aiModel: 'claude-sonnet-4-5-20250929',
       setAIModel: (aiModel) => set({ aiModel }),
     }),
     {

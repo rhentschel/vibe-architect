@@ -12,10 +12,10 @@ interface RequestBody {
   model?: string
 }
 
-const DEFAULT_MODEL = 'claude-sonnet-4-5-20241022'
+const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929'
 const ALLOWED_MODELS = [
   'claude-sonnet-4-20250514',
-  'claude-sonnet-4-5-20241022',
+  'claude-sonnet-4-5-20250929',
   'claude-opus-4-5-20251101',
 ]
 
@@ -126,7 +126,14 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json()
-    const content = data.content[0]?.text || ''
+    let content = data.content[0]?.text || ''
+
+    // Strip markdown code blocks if AI wrapped the response
+    if (content.includes('```json')) {
+      content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    } else if (content.includes('```')) {
+      content = content.replace(/```\n?/g, '').trim()
+    }
 
     let parsedResponse
     try {
