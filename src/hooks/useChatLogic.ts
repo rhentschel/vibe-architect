@@ -1,7 +1,6 @@
 import { useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useProjectStore } from '@/lib/store/useProjectStore'
-import { AIArchitectResponseSchema } from '@/types/graph.types'
 import type { Message } from '@/types/database.types'
 
 export function useChatLogic() {
@@ -82,12 +81,15 @@ export function useChatLogic() {
           throw new Error(`AI-Fehler: ${fnError.message}`)
         }
 
-        const parseResult = AIArchitectResponseSchema.safeParse(data)
-        const aiResponse = parseResult.success ? parseResult.data : {
-          message: data.message || JSON.stringify(data),
-          nodes: [],
-          edges: [],
-          gaps: [],
+        // Use data directly, with fallbacks for missing fields
+        const aiResponse = {
+          message: data.message || '',
+          nodes: Array.isArray(data.nodes) ? data.nodes : [],
+          edges: Array.isArray(data.edges) ? data.edges : [],
+          gaps: Array.isArray(data.gaps) ? data.gaps : [],
+          removedNodeIds: Array.isArray(data.removedNodeIds) ? data.removedNodeIds : [],
+          removedEdgeIds: Array.isArray(data.removedEdgeIds) ? data.removedEdgeIds : [],
+          suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
         }
 
         const assistantMessage: Message = {
