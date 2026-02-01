@@ -9,20 +9,27 @@ import ReactFlow, {
   type OnConnect,
   type OnSelectionChangeParams,
   type Connection,
+  type Node,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { toPng } from 'html-to-image'
 import { nodeTypes } from './nodes'
 import { GraphToolbar } from './GraphToolbar'
+import { NodeEditDialog } from './NodeEditDialog'
 import { useProjectStore } from '@/lib/store/useProjectStore'
+import { useArchitectureReview } from '@/hooks/useArchitectureReview'
 import { getLayoutedElements } from '@/lib/utils/graphLayout'
+import type { ReactFlowNode } from '@/types/graph.types'
 
 export function GraphCanvas() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const { zoomIn, zoomOut, fitView } = useReactFlow()
-  const { nodes, edges, updateNodePosition, addNode, addEdge, deleteNode, deleteEdge } = useProjectStore()
+  const { nodes, edges, updateNodePosition, addNode, addEdge, deleteNode, deleteEdge, updateNode } = useProjectStore()
+  const { runReview, isReviewing } = useArchitectureReview()
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
+  const [editingNode, setEditingNode] = useState<ReactFlowNode | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
@@ -86,6 +93,28 @@ export function GraphCanvas() {
     [addNode]
   )
 
+  const handleNodeDoubleClick = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      const fullNode = nodes.find((n) => n.id === node.id)
+      if (fullNode) {
+        setEditingNode(fullNode)
+        setIsEditDialogOpen(true)
+      }
+    },
+    [nodes]
+  )
+
+  const handleNodeSave = useCallback(
+    (nodeId: string, label: string, description: string) => {
+      updateNode(nodeId, label, description)
+    },
+    [updateNode]
+  )
+
+  const handleReview = useCallback(async () => {
+    await runReview()
+  }, [runReview])
+
   const handleAutoLayout = useCallback(() => {
     const { nodes: layoutedNodes } = getLayoutedElements(
       nodes,
@@ -133,6 +162,7 @@ export function GraphCanvas() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onSelectionChange={onSelectionChange}
+        onNodeDoubleClick={handleNodeDoubleClick}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
@@ -163,7 +193,17 @@ export function GraphCanvas() {
         onExportPng={handleExportPng}
         onAddNode={handleAddNode}
         onDelete={handleDelete}
+        onReview={handleReview}
         hasSelection={!!(selectedNodeId || selectedEdgeId)}
+        hasNodes={nodes.length > 0}
+        isReviewing={isReviewing}
+      />
+
+      <NodeEditDialog
+        node={editingNode}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSave={handleNodeSave}
       />
 
       {nodes.length === 0 && (

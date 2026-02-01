@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { ZoomIn, ZoomOut, Maximize2, LayoutGrid, Download, Database, Cog, Plus, Trash2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, LayoutGrid, Download, Database, Cog, Plus, Trash2, Sparkles, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -16,7 +16,10 @@ interface GraphToolbarProps {
   onExportPng: () => void
   onAddNode?: (type: 'entity' | 'process') => void
   onDelete?: () => void
+  onReview?: () => void
   hasSelection?: boolean
+  hasNodes?: boolean
+  isReviewing?: boolean
 }
 
 export function GraphToolbar({
@@ -27,7 +30,10 @@ export function GraphToolbar({
   onExportPng,
   onAddNode,
   onDelete,
+  onReview,
   hasSelection,
+  hasNodes,
+  isReviewing,
 }: GraphToolbarProps) {
   const [position, setPosition] = useState({ x: 16, y: 16 })
   const [isDragging, setIsDragging] = useState(false)
@@ -138,6 +144,25 @@ export function GraphToolbar({
       <Button variant="ghost" size="icon" onClick={onExportPng} title="Export PNG" className="cursor-pointer">
         <Download className="h-4 w-4" />
       </Button>
+      {onReview && (
+        <>
+          <div className="w-px bg-border" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onReview}
+            disabled={!hasNodes || isReviewing}
+            title={hasNodes ? "KI-Review (Opus 4.5)" : "Nodes hinzufügen für Review"}
+            className={hasNodes ? "cursor-pointer text-primary hover:text-primary hover:bg-primary/10" : "cursor-pointer text-muted-foreground"}
+          >
+            {isReviewing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+          </Button>
+        </>
+      )}
       {onDelete && (
         <>
           <div className="w-px bg-border" />
