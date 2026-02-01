@@ -1,4 +1,5 @@
-import { AlertTriangle, CheckCircle, Circle, MessageSquare } from 'lucide-react'
+import { useState } from 'react'
+import { AlertTriangle, CheckCircle, Circle, MessageSquare, ChevronDown, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,8 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { gaps, resolveGap, setPendingChatMessage } = useProjectStore()
+  const [openExpanded, setOpenExpanded] = useState(true)
+  const [resolvedExpanded, setResolvedExpanded] = useState(false)
 
   const handleDiscussGap = (gapDescription: string) => {
     const message = `Lass uns über diese Lücke sprechen:\n\n"${gapDescription}"\n\nWie können wir das lösen?`
@@ -78,68 +81,88 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <div className="space-y-4">
                 {unresolvedGaps.length > 0 && (
                   <div>
-                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                      Offen
-                    </h3>
-                    <div className="space-y-2">
-                      {unresolvedGaps.map((gap) => (
-                        <div
-                          key={gap.id}
-                          className="rounded-lg border p-3 space-y-2"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <Circle className={cn('h-4 w-4 mt-0.5 flex-shrink-0', getSeverityColor(gap.severity))} />
-                            <p className="text-sm flex-1">{gap.description}</p>
-                          </div>
-                          <div className="flex items-center justify-between gap-1">
-                            <Badge variant={getSeverityBadge(gap.severity) as 'default' | 'secondary' | 'destructive' | 'outline'}>
-                              {gap.severity}
-                            </Badge>
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDiscussGap(gap.description)}
-                                title="Im Chat besprechen"
-                                className="h-7 px-2"
-                              >
-                                <MessageSquare className="h-3.5 w-3.5 mr-1" />
-                                Besprechen
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => resolveGap(gap.id)}
-                                className="h-7 px-2"
-                              >
-                                Erledigt
-                              </Button>
+                    <button
+                      onClick={() => setOpenExpanded(!openExpanded)}
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 hover:text-foreground transition-colors w-full"
+                    >
+                      {openExpanded ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronRight className="h-3 w-3" />
+                      )}
+                      Offen ({unresolvedGaps.length})
+                    </button>
+                    {openExpanded && (
+                      <div className="space-y-2">
+                        {unresolvedGaps.map((gap) => (
+                          <div
+                            key={gap.id}
+                            className="rounded-lg border p-3 space-y-2"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <Circle className={cn('h-4 w-4 mt-0.5 flex-shrink-0', getSeverityColor(gap.severity))} />
+                              <p className="text-sm flex-1">{gap.description}</p>
+                            </div>
+                            <div className="flex items-center justify-between gap-1">
+                              <Badge variant={getSeverityBadge(gap.severity) as 'default' | 'secondary' | 'destructive' | 'outline'}>
+                                {gap.severity}
+                              </Badge>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDiscussGap(gap.description)}
+                                  title="Im Chat besprechen"
+                                  className="h-7 px-2"
+                                >
+                                  <MessageSquare className="h-3.5 w-3.5 mr-1" />
+                                  Besprechen
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => resolveGap(gap.id)}
+                                  className="h-7 px-2"
+                                >
+                                  Erledigt
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {resolvedGaps.length > 0 && (
                   <div>
-                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                      Erledigt
-                    </h3>
-                    <div className="space-y-2">
-                      {resolvedGaps.map((gap) => (
-                        <div
-                          key={gap.id}
-                          className="rounded-lg border border-dashed p-3 opacity-60"
-                        >
-                          <div className="flex items-start gap-2">
-                            <CheckCircle className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" />
-                            <p className="text-sm line-through">{gap.description}</p>
+                    <button
+                      onClick={() => setResolvedExpanded(!resolvedExpanded)}
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 hover:text-foreground transition-colors w-full"
+                    >
+                      {resolvedExpanded ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronRight className="h-3 w-3" />
+                      )}
+                      Erledigt ({resolvedGaps.length})
+                    </button>
+                    {resolvedExpanded && (
+                      <div className="space-y-2">
+                        {resolvedGaps.map((gap) => (
+                          <div
+                            key={gap.id}
+                            className="rounded-lg border border-dashed p-3 opacity-60"
+                          >
+                            <div className="flex items-start gap-2">
+                              <CheckCircle className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" />
+                              <p className="text-sm line-through">{gap.description}</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
