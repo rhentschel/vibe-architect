@@ -1,4 +1,4 @@
-import { LogOut, Menu, Plus, FolderOpen, Settings, FileText, Users } from 'lucide-react'
+import { LogOut, Plus, FolderOpen, Settings, FileText, Users, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 
@@ -12,17 +12,15 @@ interface HeaderProps {
   onLogout: () => void
   userName?: string
   isOwner?: boolean
+  sidebarOpen?: boolean
 }
 
-export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings, onGuestManagement, onExportPRD, onLogout, userName, isOwner = true }: HeaderProps) {
+export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings, onGuestManagement, onExportPRD, onLogout, userName, isOwner = true, sidebarOpen = false }: HeaderProps) {
   const { currentProject, nodes } = useProjectStore()
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border/50 bg-card/80 backdrop-blur-sm px-6 sticky top-0 z-50">
       <div className="flex items-center gap-5">
-        <Button variant="ghost" size="icon" onClick={onMenuToggle} className="md:hidden">
-          <Menu className="h-5 w-5" />
-        </Button>
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="Softwareplanung" className="h-9 w-9 rounded-xl shadow-sm" />
           <div className="hidden sm:block">
@@ -64,6 +62,16 @@ export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings,
         <Button variant="ghost" size="sm" onClick={onOpenProjects} className="rounded-lg">
           <FolderOpen className="mr-1.5 h-4 w-4" />
           <span className="hidden sm:inline">Projekte</span>
+        </Button>
+        <Button
+          variant={sidebarOpen ? "secondary" : "ghost"}
+          size="sm"
+          onClick={onMenuToggle}
+          className="rounded-lg"
+          title="Logic Gaps"
+        >
+          <AlertTriangle className="mr-1.5 h-4 w-4" />
+          <span className="hidden sm:inline">Gaps</span>
         </Button>
         {isOwner && currentProject && onGuestManagement && (
           <Button variant="ghost" size="icon" onClick={onGuestManagement} title="Gäste verwalten" className="rounded-lg">

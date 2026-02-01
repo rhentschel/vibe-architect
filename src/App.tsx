@@ -81,6 +81,7 @@ export default function App() {
         onLogout={signOut}
         userName={user?.email}
         isOwner={isOwner}
+        sidebarOpen={sidebarOpen}
       />
 
       <div className="flex flex-1 overflow-hidden">
