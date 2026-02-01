@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { Button } from '@/components/ui/button'
 
 interface SplitViewLayoutProps {
   leftPanel: ReactNode
@@ -13,14 +14,17 @@ interface SplitViewLayoutProps {
 export function SplitViewLayout({
   leftPanel,
   rightPanel,
-  defaultLeftWidth = 50,
-  minLeftWidth = 30,
-  maxLeftWidth = 70,
+  defaultLeftWidth = 65,
+  minLeftWidth = 40,
+  maxLeftWidth = 85,
 }: SplitViewLayoutProps) {
   const [leftWidth, setLeftWidth] = useState(defaultLeftWidth)
   const [isDragging, setIsDragging] = useState(false)
+  const [rightCollapsed, setRightCollapsed] = useState(false)
+  const [leftCollapsed, setLeftCollapsed] = useState(false)
 
   const handleMouseDown = () => {
+    if (leftCollapsed || rightCollapsed) return
     setIsDragging(true)
   }
 
@@ -40,34 +44,81 @@ export function SplitViewLayout({
     setIsDragging(false)
   }
 
+  const toggleRight = () => {
+    setRightCollapsed(!rightCollapsed)
+    setLeftCollapsed(false)
+  }
+
+  const toggleLeft = () => {
+    setLeftCollapsed(!leftCollapsed)
+    setRightCollapsed(false)
+  }
+
   return (
     <div
-      className="flex h-full"
+      className="flex h-full relative"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <div
-        className="h-full overflow-hidden"
-        style={{ width: `${leftWidth}%` }}
-      >
-        {leftPanel}
-      </div>
-
+      {/* Left Panel (Graph) */}
       <div
         className={cn(
-          'relative flex w-1 cursor-col-resize items-center justify-center bg-border hover:bg-primary/20 transition-colors',
-          isDragging && 'bg-primary/30'
+          "h-full overflow-hidden transition-all duration-300 relative",
+          leftCollapsed ? "w-0" : rightCollapsed ? "w-full" : ""
         )}
-        onMouseDown={handleMouseDown}
+        style={!leftCollapsed && !rightCollapsed ? { width: `${leftWidth}%` } : undefined}
       >
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
+        {leftPanel}
+
+        {/* Toggle button for right panel - positioned in graph area */}
+        {!leftCollapsed && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute top-4 right-4 z-20 h-8 w-8 bg-card/90 backdrop-blur-sm shadow-sm"
+            onClick={toggleRight}
+            title={rightCollapsed ? "Chat öffnen" : "Chat schließen"}
+          >
+            {rightCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
+          </Button>
+        )}
       </div>
 
+      {/* Resize Handle */}
+      {!leftCollapsed && !rightCollapsed && (
+        <div
+          className={cn(
+            'relative flex w-1 cursor-col-resize items-center justify-center bg-border hover:bg-primary/20 transition-colors',
+            isDragging && 'bg-primary/30'
+          )}
+          onMouseDown={handleMouseDown}
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
+      )}
+
+      {/* Right Panel (Chat) */}
       <div
-        className="h-full overflow-hidden flex-1"
-        style={{ width: `${100 - leftWidth}%` }}
+        className={cn(
+          "h-full overflow-hidden transition-all duration-300 relative",
+          rightCollapsed ? "w-0" : leftCollapsed ? "w-full" : "flex-1"
+        )}
+        style={!leftCollapsed && !rightCollapsed ? { width: `${100 - leftWidth}%` } : undefined}
       >
+        {/* Toggle button for left panel - positioned in chat area */}
+        {!rightCollapsed && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute top-4 left-4 z-20 h-8 w-8 bg-card/90 backdrop-blur-sm shadow-sm"
+            onClick={toggleLeft}
+            title={leftCollapsed ? "Graph öffnen" : "Graph schließen"}
+          >
+            {leftCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </Button>
+        )}
+
         {rightPanel}
       </div>
     </div>
