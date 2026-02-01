@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AlertTriangle, CheckCircle, Circle, MessageSquare, ChevronDown, ChevronRight } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Circle, MessageSquare, ChevronDown, ChevronRight, PanelLeftClose, PanelLeft } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { gaps, resolveGap, setPendingChatMessage } = useProjectStore()
   const [openExpanded, setOpenExpanded] = useState(true)
   const [resolvedExpanded, setResolvedExpanded] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
 
   const handleDiscussGap = (gapDescription: string) => {
     const message = `Lass uns über diese Lücke sprechen:\n\n"${gapDescription}"\n\nWie können wir das lösen?`
@@ -57,27 +58,67 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}
       <aside
         className={cn(
-          'fixed left-0 top-14 z-50 h-[calc(100vh-3.5rem)] w-72 border-r bg-background transition-transform md:static md:translate-x-0',
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          'fixed left-0 top-14 z-50 h-[calc(100vh-3.5rem)] border-r bg-background transition-all duration-300 md:static md:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+          collapsed ? 'w-14' : 'w-72'
         )}
       >
         <div className="flex h-full flex-col">
           <div className="border-b p-4">
-            <h2 className="font-semibold flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Logic Gaps
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {unresolvedGaps.length} offen, {resolvedGaps.length} erledigt
-            </p>
+            <div className="flex items-center justify-between">
+              {collapsed ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCollapsed(false)}
+                  className="h-8 w-8 mx-auto"
+                  title="Sidebar ausklappen"
+                >
+                  <PanelLeft className="h-4 w-4" />
+                </Button>
+              ) : (
+                <>
+                  <div>
+                    <h2 className="font-semibold flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Logic Gaps
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {unresolvedGaps.length} offen, {resolvedGaps.length} erledigt
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCollapsed(true)}
+                    className="h-8 w-8 shrink-0"
+                    title="Sidebar einklappen"
+                  >
+                    <PanelLeftClose className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
 
-          <ScrollArea className="flex-1 p-4">
-            {unresolvedGaps.length === 0 && resolvedGaps.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Keine Gaps gefunden. Starte eine Konversation, um deine Architektur zu analysieren.
-              </p>
-            ) : (
+          {collapsed ? (
+            <div className="flex flex-col items-center gap-2 p-2 pt-4">
+              <div className="relative">
+                <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+                {unresolvedGaps.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+                    {unresolvedGaps.length}
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <ScrollArea className="flex-1 p-4">
+              {unresolvedGaps.length === 0 && resolvedGaps.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Keine Gaps gefunden. Starte eine Konversation, um deine Architektur zu analysieren.
+                </p>
+              ) : (
               <div className="space-y-4">
                 {unresolvedGaps.length > 0 && (
                   <div>
@@ -167,7 +208,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 )}
               </div>
             )}
-          </ScrollArea>
+            </ScrollArea>
+          )}
         </div>
       </aside>
     </>
