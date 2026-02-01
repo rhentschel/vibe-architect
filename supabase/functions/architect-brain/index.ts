@@ -144,13 +144,30 @@ Deno.serve(async (req) => {
     try {
       parsedResponse = JSON.parse(content)
     } catch {
-      parsedResponse = {
-        message: content,
-        nodes: [],
-        edges: [],
-        gaps: [],
-        resolvedGapIds: [],
-        suggestions: [],
+      // Try to extract JSON object from the response if there's text before it
+      const jsonMatch = content.match(/\{[\s\S]*"message"[\s\S]*\}$/)
+      if (jsonMatch) {
+        try {
+          parsedResponse = JSON.parse(jsonMatch[0])
+        } catch {
+          parsedResponse = {
+            message: content,
+            nodes: [],
+            edges: [],
+            gaps: [],
+            resolvedGapIds: [],
+            suggestions: [],
+          }
+        }
+      } else {
+        parsedResponse = {
+          message: content,
+          nodes: [],
+          edges: [],
+          gaps: [],
+          resolvedGapIds: [],
+          suggestions: [],
+        }
       }
     }
 
