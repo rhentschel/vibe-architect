@@ -18,7 +18,7 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, isLoading, placeholder = 'Beschreibe deine Software-Architektur...' }: ChatInputProps) {
   const [message, setMessage] = useState('')
-  const [attachedFile, setAttachedFile] = useState<ParsedFile | null>(null)
+  const [attachedFiles, setAttachedFiles] = useState<ParsedFile[]>([])
   const [isParsingFile, setIsParsingFile] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -32,44 +32,65 @@ export function ChatInput({ onSend, isLoading, placeholder = 'Beschreibe deine S
   }, [message])
 
   const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = e.target.files
+    if (!files || files.length === 0) return
 
     setFileError(null)
+    setIsParsingFile(true)
 
-    if (file.size > MAX_FILE_SIZE) {
-      setFileError(`Datei zu groß. Maximum: ${formatFileSize(MAX_FILE_SIZE)}`)
-      return
+    const newFiles: ParsedFile[] = []
+    const errors: string[] = []
+
+    for (const file of Array.from(files)) {
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push(`${file.name}: zu groß (max ${formatFileSize(MAX_FILE_SIZE)})`)
+        continue
+      }
+
+      try {
+        const parsed = await parseFile(file)
+        newFiles.push(parsed)
+      } catch (error) {
+        errors.push(`${file.name}: ${error instanceof Error ? error.message : 'Fehler'}`)
+      }
     }
 
-    setIsParsingFile(true)
-    try {
-      const parsed = await parseFile(file)
-      setAttachedFile(parsed)
-    } catch (error) {
-      setFileError(error instanceof Error ? error.message : 'Fehler beim Lesen der Datei')
-    } finally {
-      setIsParsingFile(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
+    if (newFiles.length > 0) {
+      setAttachedFiles(prev => [...prev, ...newFiles])
+    }
+
+    if (errors.length > 0) {
+      setFileError(errors.join('\n'))
+    }
+
+    setIsParsingFile(false)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
 
-  const handleRemoveFile = () => {
-    setAttachedFile(null)
+  const handleRemoveFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index))
+    setFileError(null)
+  }
+
+  const handleRemoveAllFiles = () => {
+    setAttachedFiles([])
     setFileError(null)
   }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    if ((message.trim() || attachedFile) && !isLoading) {
-      const fileContent = attachedFile
-        ? `\n\n--- Angehängte Datei: ${attachedFile.name} ---\n${attachedFile.content}\n--- Ende der Datei ---`
+    if ((message.trim() || attachedFiles.length > 0) && !isLoading) {
+      const fileContent = attachedFiles.length > 0
+        ? attachedFiles.map(f => `\n\n--- Angehängte Datei: ${f.name} ---\n${f.content}\n--- Ende der Datei ---`).join('')
         : undefined
-      onSend(message.trim() || 'Analysiere die angehängte Datei und erstelle eine passende Architektur.', fileContent)
+      onSend(
+        message.trim() || `Analysiere die ${attachedFiles.length} angehängte${attachedFiles.length > 1 ? 'n' : ''} Datei${attachedFiles.length > 1 ? 'en' : ''} und erstelle eine passende Architektur.`,
+        fileContent
+      )
       setMessage('')
-      setAttachedFile(null)
+      setAttachedFiles([])
     }
   }
 
@@ -86,33 +107,55 @@ export function ChatInput({ onSend, isLoading, placeholder = 'Beschreibe deine S
     return <File className="h-4 w-4 text-muted-foreground" />
   }
 
+  const totalCharacters = attachedFiles.reduce((sum, f) => sum + f.content.length, 0)
+
   return (
     <form onSubmit={handleSubmit} className="border-t border-border/50 bg-card/50 p-4">
-      {/* Attached File Preview */}
-      {attachedFile && (
-        <div className="mb-3 flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 px-3 py-2">
-          {getFileIcon(attachedFile.type)}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{attachedFile.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {formatFileSize(attachedFile.size)} • {attachedFile.content.length.toLocaleString()} Zeichen
-            </p>
+      {/* Attached Files Preview */}
+      {attachedFiles.length > 0 && (
+        <div className="mb-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              {attachedFiles.length} Datei{attachedFiles.length > 1 ? 'en' : ''} • {totalCharacters.toLocaleString()} Zeichen
+            </span>
+            {attachedFiles.length > 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs"
+                onClick={handleRemoveAllFiles}
+              >
+                Alle entfernen
+              </Button>
+            )}
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 shrink-0"
-            onClick={handleRemoveFile}
-          >
-            <X className="h-3 w-3" />
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {attachedFiles.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 px-2 py-1"
+              >
+                {getFileIcon(file.type)}
+                <span className="text-xs font-medium truncate max-w-[150px]">{file.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 shrink-0"
+                  onClick={() => handleRemoveFile(index)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {/* File Error */}
       {fileError && (
-        <div className="mb-3 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <div className="mb-3 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive whitespace-pre-line">
           {fileError}
         </div>
       )}
@@ -124,6 +167,7 @@ export function ChatInput({ onSend, isLoading, placeholder = 'Beschreibe deine S
           type="file"
           accept={SUPPORTED_FILE_TYPES.join(',')}
           onChange={handleFileSelect}
+          multiple
           className="hidden"
         />
         <Button
@@ -133,7 +177,7 @@ export function ChatInput({ onSend, isLoading, placeholder = 'Beschreibe deine S
           className="h-10 w-10 flex-shrink-0 rounded-lg"
           onClick={() => fileInputRef.current?.click()}
           disabled={isLoading || isParsingFile}
-          title="Datei anhängen (PDF, Word, Text)"
+          title="Dateien anhängen (PDF, Word, Text) - mehrere möglich"
         >
           {isParsingFile ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -148,7 +192,7 @@ export function ChatInput({ onSend, isLoading, placeholder = 'Beschreibe deine S
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={attachedFile ? 'Anweisungen zur Datei (optional)...' : placeholder}
+            placeholder={attachedFiles.length > 0 ? 'Anweisungen zu den Dateien (optional)...' : placeholder}
             disabled={isLoading}
             rows={1}
             className={cn(
@@ -164,7 +208,7 @@ export function ChatInput({ onSend, isLoading, placeholder = 'Beschreibe deine S
         <Button
           type="submit"
           size="icon"
-          disabled={(!message.trim() && !attachedFile) || isLoading}
+          disabled={(!message.trim() && attachedFiles.length === 0) || isLoading}
           className="h-10 w-10 flex-shrink-0 rounded-lg shadow-sm"
         >
           {isLoading ? (
@@ -177,7 +221,7 @@ export function ChatInput({ onSend, isLoading, placeholder = 'Beschreibe deine S
 
       <p className="mt-2 text-xs text-muted-foreground">
         <span className="hidden sm:inline">Drücke Enter zum Senden, Shift+Enter für neue Zeile • </span>
-        PDF, Word, Text-Dateien werden unterstützt
+        Mehrere PDF, Word, Text-Dateien möglich
       </p>
     </form>
   )
