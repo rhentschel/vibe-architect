@@ -106,12 +106,12 @@ export function SplitViewLayout({
         )}
         style={!leftCollapsed && !rightCollapsed ? { width: `${100 - leftWidth}%` } : undefined}
       >
-        {/* Toggle button for left panel - positioned in chat area */}
+        {/* Toggle button for left panel - positioned below chat header */}
         {!rightCollapsed && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="absolute top-4 left-4 z-20 h-8 w-8 bg-card/90 backdrop-blur-sm shadow-sm"
+            className="absolute top-16 left-2 z-20 h-7 w-7 opacity-60 hover:opacity-100"
             onClick={toggleLeft}
             title={leftCollapsed ? "Graph öffnen" : "Graph schließen"}
           >
