@@ -1,11 +1,11 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type ReactNode, type ReactElement, cloneElement, isValidElement } from 'react'
 import { GripVertical, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { Button } from '@/components/ui/button'
 
 interface SplitViewLayoutProps {
   leftPanel: ReactNode
-  rightPanel: ReactNode
+  rightPanel: ReactElement
   defaultLeftWidth?: number
   minLeftWidth?: number
   maxLeftWidth?: number
@@ -54,6 +54,24 @@ export function SplitViewLayout({
     setRightCollapsed(false)
   }
 
+  // Create the header action button for the chat panel
+  const chatHeaderAction = (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 shrink-0"
+      onClick={toggleLeft}
+      title={leftCollapsed ? "Graph öffnen" : "Graph schließen"}
+    >
+      {leftCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+    </Button>
+  )
+
+  // Clone the right panel and inject the header action
+  const rightPanelWithAction = isValidElement(rightPanel)
+    ? cloneElement(rightPanel, { headerAction: chatHeaderAction } as Record<string, unknown>)
+    : rightPanel
+
   return (
     <div
       className="flex h-full relative"
@@ -101,25 +119,12 @@ export function SplitViewLayout({
       {/* Right Panel (Chat) */}
       <div
         className={cn(
-          "h-full overflow-hidden transition-all duration-300 relative",
+          "h-full overflow-hidden transition-all duration-300",
           rightCollapsed ? "w-0" : leftCollapsed ? "w-full" : "flex-1"
         )}
         style={!leftCollapsed && !rightCollapsed ? { width: `${100 - leftWidth}%` } : undefined}
       >
-        {/* Toggle button for left panel - positioned below chat header */}
-        {!rightCollapsed && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-16 left-2 z-20 h-7 w-7 opacity-60 hover:opacity-100"
-            onClick={toggleLeft}
-            title={leftCollapsed ? "Graph öffnen" : "Graph schließen"}
-          >
-            {leftCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          </Button>
-        )}
-
-        {rightPanel}
+        {rightPanelWithAction}
       </div>
     </div>
   )

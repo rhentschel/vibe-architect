@@ -1,11 +1,15 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { MessageBubble } from './MessageBubble'
 import { ChatInput } from './ChatInput'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 import { useChatLogic } from '@/hooks/useChatLogic'
 
-export function ChatInterface() {
+interface ChatInterfaceProps {
+  headerAction?: ReactNode
+}
+
+export function ChatInterface({ headerAction }: ChatInterfaceProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const { messages, isSending, currentProject } = useProjectStore()
   const { sendMessage } = useChatLogic()
@@ -31,11 +35,14 @@ export function ChatInterface() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background">
-      <div className="border-b px-4 py-3 shrink-0">
-        <h2 className="font-semibold">{currentProject.name}</h2>
-        {currentProject.description && (
-          <p className="text-sm text-muted-foreground">{currentProject.description}</p>
-        )}
+      <div className="border-b px-4 py-3 shrink-0 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className="font-semibold truncate">{currentProject.name}</h2>
+          {currentProject.description && (
+            <p className="text-sm text-muted-foreground truncate">{currentProject.description}</p>
+          )}
+        </div>
+        {headerAction}
       </div>
 
       <ScrollArea ref={scrollRef} className="flex-1 overflow-y-auto p-4">
