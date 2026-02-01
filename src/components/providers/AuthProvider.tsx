@@ -110,10 +110,8 @@ function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground text-xl font-bold">
-            VA
-          </div>
-          <CardTitle>VibeArchitect</CardTitle>
+          <img src="/logo.png" alt="Softwareplanung" className="mx-auto mb-4 h-12 w-12 rounded-xl shadow-sm" />
+          <CardTitle>Softwareplanung</CardTitle>
           <CardDescription>
             {isSignUp ? 'Erstelle ein neues Konto' : 'Melde dich an, um fortzufahren'}
           </CardDescription>
