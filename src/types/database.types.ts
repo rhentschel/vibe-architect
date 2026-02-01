@@ -54,6 +54,19 @@ export interface LogicGapData {
   resolved: boolean
 }
 
+export type ProjectRole = 'owner' | 'guest'
+
+export interface ProjectMember {
+  id: string
+  project_id: string
+  user_id: string
+  role: ProjectRole
+  invited_by: string | null
+  created_at: string
+  // Joined user email (from auth.users)
+  email?: string
+}
+
 export interface Database {
   public: {
     Tables: {

@@ -12,6 +12,7 @@ interface ProjectState {
   isLoading: boolean
   isSending: boolean
   error: string | null
+  pendingChatMessage: string | null
 }
 
 interface ProjectActions {
@@ -30,6 +31,7 @@ interface ProjectActions {
   setIsLoading: (loading: boolean) => void
   setIsSending: (sending: boolean) => void
   setError: (error: string | null) => void
+  setPendingChatMessage: (message: string | null) => void
   reset: () => void
 }
 
@@ -42,6 +44,7 @@ const initialState: ProjectState = {
   isLoading: false,
   isSending: false,
   error: null,
+  pendingChatMessage: null,
 }
 
 export const useProjectStore = create<ProjectState & ProjectActions>()(
@@ -234,6 +237,8 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
       setIsSending: (isSending) => set({ isSending }),
 
       setError: (error) => set({ error }),
+
+      setPendingChatMessage: (pendingChatMessage) => set({ pendingChatMessage }),
 
       reset: () => set(initialState),
     }),

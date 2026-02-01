@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, Circle } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Circle, MessageSquare } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,13 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const { gaps, resolveGap } = useProjectStore()
+  const { gaps, resolveGap, setPendingChatMessage } = useProjectStore()
+
+  const handleDiscussGap = (gapDescription: string) => {
+    const message = `Lass uns über diese Lücke sprechen:\n\n"${gapDescription}"\n\nWie können wir das lösen?`
+    setPendingChatMessage(message)
+    onClose()
+  }
 
   const unresolvedGaps = gaps.filter((g) => !g.resolved)
   const resolvedGaps = gaps.filter((g) => g.resolved)
@@ -85,17 +91,30 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             <Circle className={cn('h-4 w-4 mt-0.5 flex-shrink-0', getSeverityColor(gap.severity))} />
                             <p className="text-sm flex-1">{gap.description}</p>
                           </div>
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between gap-1">
                             <Badge variant={getSeverityBadge(gap.severity) as 'default' | 'secondary' | 'destructive' | 'outline'}>
                               {gap.severity}
                             </Badge>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => resolveGap(gap.id)}
-                            >
-                              Erledigt
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDiscussGap(gap.description)}
+                                title="Im Chat besprechen"
+                                className="h-7 px-2"
+                              >
+                                <MessageSquare className="h-3.5 w-3.5 mr-1" />
+                                Besprechen
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => resolveGap(gap.id)}
+                                className="h-7 px-2"
+                              >
+                                Erledigt
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}

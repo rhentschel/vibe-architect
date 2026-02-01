@@ -1,4 +1,4 @@
-import { LogOut, Menu, Plus, FolderOpen, Settings, FileText } from 'lucide-react'
+import { LogOut, Menu, Plus, FolderOpen, Settings, FileText, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 
@@ -7,12 +7,14 @@ interface HeaderProps {
   onNewProject: () => void
   onOpenProjects: () => void
   onSettings: () => void
+  onGuestManagement?: () => void
   onExportPRD?: () => void
   onLogout: () => void
   userName?: string
+  isOwner?: boolean
 }
 
-export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings, onExportPRD, onLogout, userName }: HeaderProps) {
+export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings, onGuestManagement, onExportPRD, onLogout, userName, isOwner = true }: HeaderProps) {
   const { currentProject, nodes } = useProjectStore()
 
   return (
@@ -63,9 +65,16 @@ export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings,
           <FolderOpen className="mr-1.5 h-4 w-4" />
           <span className="hidden sm:inline">Projekte</span>
         </Button>
-        <Button variant="ghost" size="icon" onClick={onSettings} title="Einstellungen" className="rounded-lg">
-          <Settings className="h-4 w-4" />
-        </Button>
+        {isOwner && currentProject && onGuestManagement && (
+          <Button variant="ghost" size="icon" onClick={onGuestManagement} title="Gäste verwalten" className="rounded-lg">
+            <Users className="h-4 w-4" />
+          </Button>
+        )}
+        {isOwner && (
+          <Button variant="ghost" size="icon" onClick={onSettings} title="Einstellungen" className="rounded-lg">
+            <Settings className="h-4 w-4" />
+          </Button>
+        )}
         <div className="w-px h-6 bg-border/50 mx-1 hidden md:block" />
         {userName && (
           <span className="text-xs text-muted-foreground hidden md:inline px-2 truncate max-w-[150px]">

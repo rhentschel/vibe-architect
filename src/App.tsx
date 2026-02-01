@@ -8,6 +8,7 @@ import { GraphCanvas } from '@/components/features/graph/GraphCanvas'
 import { ChatInterface } from '@/components/features/chat/ChatInterface'
 import { PrdExportDialog } from '@/components/features/export/PrdExportDialog'
 import { SettingsDialog } from '@/components/features/settings/SettingsDialog'
+import { GuestManagementDialog } from '@/components/features/settings/GuestManagementDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui/dialog'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useProjects, useCreateProject, useLoadProject, useDeleteProject } from '@/hooks/useProjectData'
+import { useProjectRole } from '@/hooks/useProjectMembers'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 
 export default function App() {
@@ -30,10 +32,13 @@ export default function App() {
   const [showProjectsDialog, setShowProjectsDialog] = useState(false)
   const [showExportDialog, setShowExportDialog] = useState(false)
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
+  const [showGuestDialog, setShowGuestDialog] = useState(false)
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectDescription, setNewProjectDescription] = useState('')
 
   const { currentProject } = useProjectStore()
+  const { data: userRole } = useProjectRole(currentProject?.id, user?.id)
+  const isOwner = !currentProject || userRole === 'owner' || currentProject.user_id === user?.id
   const { data: projects = [], isLoading: projectsLoading } = useProjects(user?.id)
   const createProject = useCreateProject()
   const loadProject = useLoadProject()
@@ -71,9 +76,11 @@ export default function App() {
         onNewProject={() => setShowNewProjectDialog(true)}
         onOpenProjects={() => setShowProjectsDialog(true)}
         onSettings={() => setShowSettingsDialog(true)}
+        onGuestManagement={() => setShowGuestDialog(true)}
         onExportPRD={() => setShowExportDialog(true)}
         onLogout={signOut}
         userName={user?.email}
+        isOwner={isOwner}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -221,6 +228,14 @@ export default function App() {
 
       <PrdExportDialog open={showExportDialog} onOpenChange={setShowExportDialog} />
       <SettingsDialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog} />
+      {currentProject && (
+        <GuestManagementDialog
+          open={showGuestDialog}
+          onOpenChange={setShowGuestDialog}
+          projectId={currentProject.id}
+          projectName={currentProject.name}
+        />
+      )}
     </div>
   )
 }

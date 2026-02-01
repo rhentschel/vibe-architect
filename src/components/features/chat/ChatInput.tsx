@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent, type C
 import { Send, Loader2, Paperclip, X, FileText, File } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
+import { useProjectStore } from '@/lib/store/useProjectStore'
 import {
   parseFile,
   formatFileSize,
@@ -17,6 +18,7 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSend, isLoading, placeholder = 'Beschreibe deine Software-Architektur...' }: ChatInputProps) {
+  const { pendingChatMessage, setPendingChatMessage } = useProjectStore()
   const [message, setMessage] = useState('')
   const [attachedFiles, setAttachedFiles] = useState<ParsedFile[]>([])
   const [isParsingFile, setIsParsingFile] = useState(false)
@@ -30,6 +32,18 @@ export function ChatInput({ onSend, isLoading, placeholder = 'Beschreibe deine S
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`
     }
   }, [message])
+
+  // Handle pending chat message from sidebar (e.g., discussing a gap)
+  useEffect(() => {
+    if (pendingChatMessage) {
+      setMessage(pendingChatMessage)
+      setPendingChatMessage(null)
+      // Focus the textarea
+      setTimeout(() => {
+        textareaRef.current?.focus()
+      }, 100)
+    }
+  }, [pendingChatMessage, setPendingChatMessage])
 
   const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
