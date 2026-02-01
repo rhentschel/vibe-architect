@@ -1,4 +1,4 @@
-import { LogOut, Menu, Plus, FolderOpen, Settings, FileText, Sparkles } from 'lucide-react'
+import { LogOut, Menu, Plus, FolderOpen, Settings, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 
@@ -22,11 +22,9 @@ export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings,
           <Menu className="h-5 w-5" />
         </Button>
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm">
-            <Sparkles className="h-4 w-4" />
-          </div>
+          <img src="/logo.png" alt="Softwareplanung" className="h-9 w-9 rounded-xl shadow-sm" />
           <div className="hidden sm:block">
-            <span className="font-display font-medium text-base tracking-tight">VibeArchitect</span>
+            <span className="font-display font-medium text-base tracking-tight">Softwareplanung</span>
           </div>
         </div>
         {currentProject && (
