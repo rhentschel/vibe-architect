@@ -1,11 +1,8 @@
 import * as pdfjsLib from 'pdfjs-dist'
 import mammoth from 'mammoth'
 
-// Configure PDF.js worker - use local worker from node_modules
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString()
+// Disable worker - runs on main thread (works everywhere)
+pdfjsLib.GlobalWorkerOptions.workerSrc = ''
 
 export interface ParsedFile {
   name: string
@@ -46,7 +43,7 @@ export async function parseFile(file: File): Promise<ParsedFile> {
 
 async function parsePDF(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer()
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer, useWorkerFetch: false, isEvalSupported: false, useSystemFonts: true }).promise
 
   const textParts: string[] = []
 
