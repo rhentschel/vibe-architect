@@ -35,6 +35,7 @@ export const AIArchitectResponseSchema = z.object({
   gaps: z.array(LogicGapSchema).optional(),
   removedNodeIds: z.array(z.string()).optional(),
   removedEdgeIds: z.array(z.string()).optional(),
+  resolvedGapIds: z.array(z.string()).optional(),
   suggestions: z.array(z.string()).optional(),
 })
 

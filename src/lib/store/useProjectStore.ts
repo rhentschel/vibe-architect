@@ -103,6 +103,15 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
           newEdges = newEdges.filter((e) => !response.removedEdgeIds!.includes(e.id))
         }
 
+        // Mark resolved gaps
+        if (response.resolvedGapIds?.length) {
+          newGaps = newGaps.map((gap) =>
+            response.resolvedGapIds!.includes(gap.id)
+              ? { ...gap, resolved: true }
+              : gap
+          )
+        }
+
         if (response.nodes?.length) {
           for (const node of response.nodes) {
             const existingIndex = newNodes.findIndex((n) => n.id === node.id)

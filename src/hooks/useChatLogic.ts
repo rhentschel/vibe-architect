@@ -103,6 +103,7 @@ export function useChatLogic() {
           gaps: Array.isArray(data.gaps) ? data.gaps : [],
           removedNodeIds: Array.isArray(data.removedNodeIds) ? data.removedNodeIds : [],
           removedEdgeIds: Array.isArray(data.removedEdgeIds) ? data.removedEdgeIds : [],
+          resolvedGapIds: Array.isArray(data.resolvedGapIds) ? data.resolvedGapIds : [],
           suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
         }
 

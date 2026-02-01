@@ -29,7 +29,7 @@ When the user describes their system or asks questions, you should:
 4. Point out potential logic gaps or missing pieces
 5. Provide clear explanations
 
-IMPORTANT: You must respond with valid JSON in this exact format:
+CRITICAL: You MUST ALWAYS respond with valid JSON in this exact format - no markdown, no code blocks, just raw JSON:
 {
   "message": "Your conversational response to the user explaining your analysis and suggestions",
   "nodes": [
@@ -59,6 +59,7 @@ IMPORTANT: You must respond with valid JSON in this exact format:
   ],
   "removedNodeIds": ["ids of nodes to remove if refactoring"],
   "removedEdgeIds": ["ids of edges to remove if refactoring"],
+  "resolvedGapIds": ["ids of gaps that user has now clarified"],
   "suggestions": ["Optional follow-up questions or suggestions"]
 }
 
@@ -70,8 +71,12 @@ Edge labels should describe the data flow or relationship (e.g., "sends data to"
 
 Gaps represent missing information, unclear requirements, or potential architectural issues.
 
-Only include nodes, edges, gaps that are NEW or CHANGED. Don't repeat existing unchanged elements.
-If removing elements, specify their IDs in removedNodeIds/removedEdgeIds.
+IMPORTANT RULES:
+1. When user provides NEW information (especially answering questions about gaps), you MUST create NEW nodes and edges to represent that information. Generate unique IDs like "node-payment-service" or "edge-user-to-auth".
+2. When a gap is addressed by user's new information, include its ID in "resolvedGapIds" AND add the corresponding new nodes/edges.
+3. Only include nodes, edges, gaps that are NEW or CHANGED. Don't repeat existing unchanged elements.
+4. If removing elements, specify their IDs in removedNodeIds/removedEdgeIds.
+5. ALWAYS add nodes when user clarifies architecture details - never just respond with text only.
 
 Always respond in the same language the user uses.`
 
@@ -144,6 +149,7 @@ Deno.serve(async (req) => {
         nodes: [],
         edges: [],
         gaps: [],
+        resolvedGapIds: [],
         suggestions: [],
       }
     }
