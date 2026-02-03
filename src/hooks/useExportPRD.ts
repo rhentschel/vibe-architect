@@ -2,11 +2,31 @@ import { useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 
+export type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio'
+
+export const exportFormatLabels: Record<ExportFormat, string> = {
+  'standard': 'Standard PRD',
+  'lovable': 'Lovable Knowledge-File',
+  'claude-code': 'Claude Code (CLAUDE.md)',
+  'firebase-studio': 'Firebase Studio / Antigravity',
+}
+
+export const exportFormatDescriptions: Record<ExportFormat, string> = {
+  'standard': 'Vollständiges Product Requirements Document mit allen technischen Details',
+  'lovable': 'Optimiert für lovable.dev - Knowledge-File mit Design-Philosophie und User Journeys',
+  'claude-code': 'Kompaktes CLAUDE.md Memory-File für Claude Code CLI (<300 Zeilen)',
+  'firebase-studio': 'Elevator-Pitch Format für Firebase Studio App Prototyping',
+}
+
 interface StreamCallbacks {
   onChunk?: (text: string) => void
   onComplete?: (fullText: string) => void
   onError?: (error: string) => void
   onPartComplete?: (part: 1 | 2) => void
+}
+
+interface GeneratePRDOptions extends StreamCallbacks {
+  format?: ExportFormat
 }
 
 export function useExportPRD() {
@@ -25,10 +45,12 @@ export function useExportPRD() {
     setCurrentPart(null)
   }, [])
 
-  const generatePRD = useCallback(async (callbacks?: StreamCallbacks): Promise<string | null> => {
+  const generatePRD = useCallback(async (options?: GeneratePRDOptions): Promise<string | null> => {
     if (!currentProject) {
       return null
     }
+
+    const format = options?.format || 'standard'
 
     setIsGenerating(true)
     setStreamedContent('')
@@ -74,6 +96,7 @@ export function useExportPRD() {
         projectDescription: currentProject.description,
         graph: graphData,
         messages: chatMessages,
+        format,
       }
 
       let fullText = ''
@@ -95,8 +118,8 @@ export function useExportPRD() {
         throw new Error(errorData.error || `HTTP ${response1.status}`)
       }
 
-      fullText = await processStream(response1, fullText, setStreamedContent, callbacks)
-      callbacks?.onPartComplete?.(1)
+      fullText = await processStream(response1, fullText, setStreamedContent, options)
+      options?.onPartComplete?.(1)
 
       // Check if aborted
       if (abortControllerRef.current?.signal.aborted) {
@@ -124,16 +147,19 @@ export function useExportPRD() {
         throw new Error(errorData.error || `HTTP ${response2.status}`)
       }
 
-      fullText = await processStream(response2, fullText, setStreamedContent, callbacks)
-      callbacks?.onPartComplete?.(2)
+      fullText = await processStream(response2, fullText, setStreamedContent, options)
+      options?.onPartComplete?.(2)
 
       // Clean up markers
       fullText = fullText
         .replace(/\*\*\[TEIL 1 ENDE - FORTSETZUNG IN TEIL 2\]\*\*/g, '')
         .replace(/---\s*\n\s*\n\s*##\s*6\./g, '---\n\n## 6.')
+        .replace(/---\s*\n\s*\n\s*##\s*Backend/g, '---\n\n## Backend')
+        .replace(/---\s*\n\s*\n\s*##\s*Commands/g, '---\n\n## Commands')
+        .replace(/---\s*\n\s*\n\s*##\s*Technical Requirements/g, '---\n\n## Technical Requirements')
 
       setStreamedContent(fullText)
-      callbacks?.onComplete?.(fullText)
+      options?.onComplete?.(fullText)
       return fullText
 
     } catch (error) {
@@ -141,7 +167,7 @@ export function useExportPRD() {
         return null
       }
       const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler'
-      callbacks?.onError?.(errorMessage)
+      options?.onError?.(errorMessage)
       return `# Fehler bei der PRD-Generierung\n\n${errorMessage}`
     } finally {
       setIsGenerating(false)

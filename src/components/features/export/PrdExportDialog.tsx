@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Download, Copy, Loader2, FileText, Check, X } from 'lucide-react'
+import { Download, Copy, Loader2, FileText, Check, X, ChevronDown } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,18 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useExportPRD } from '@/hooks/useExportPRD'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  useExportPRD,
+  type ExportFormat,
+  exportFormatLabels,
+  exportFormatDescriptions,
+} from '@/hooks/useExportPRD'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 
 interface PrdExportDialogProps {
@@ -23,11 +34,13 @@ interface PrdExportDialogProps {
 export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
   const [prdContent, setPrdContent] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('standard')
   const { currentProject } = useProjectStore()
   const { generatePRD, isGenerating, streamedContent, currentPart, cancelGeneration } = useExportPRD()
 
   const handleGenerate = async () => {
     const content = await generatePRD({
+      format: selectedFormat,
       onComplete: (fullText) => {
         setPrdContent(fullText)
       },
@@ -53,11 +66,17 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
   const handleDownload = () => {
     const contentToDownload = prdContent || streamedContent
     if (contentToDownload && currentProject) {
+      const fileExtensions: Record<ExportFormat, string> = {
+        'standard': 'prd.md',
+        'lovable': 'lovable-knowledge.md',
+        'claude-code': 'CLAUDE.md',
+        'firebase-studio': 'firebase-studio-prompt.md',
+      }
       const blob = new Blob([contentToDownload], { type: 'text/markdown' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${currentProject.name.toLowerCase().replace(/\s+/g, '-')}-prd.md`
+      link.download = `${currentProject.name.toLowerCase().replace(/\s+/g, '-')}-${fileExtensions[selectedFormat]}`
       link.click()
       URL.revokeObjectURL(url)
     }
@@ -69,6 +88,7 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
     }
     onOpenChange(false)
     setPrdContent(null)
+    setSelectedFormat('standard')
   }
 
   // Show streamed content while generating, or final content when done
@@ -93,12 +113,41 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
             <div className="flex flex-col items-center justify-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground" />
               <p className="mt-4 text-sm text-muted-foreground text-center max-w-sm">
-                Klicke auf "Generieren", um ein vollständiges PRD basierend auf deiner
-                Architektur und Konversation zu erstellen.
+                Wähle ein Export-Format und generiere ein Dokument basierend auf deiner
+                Architektur und Konversation.
               </p>
-              <Button onClick={handleGenerate} className="mt-6">
-                PRD Generieren
-              </Button>
+
+              <div className="mt-6 w-full max-w-md space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Export Format</label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between">
+                        {exportFormatLabels[selectedFormat]}
+                        <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-[400px]">
+                      {(Object.keys(exportFormatLabels) as ExportFormat[]).map((format) => (
+                        <DropdownMenuItem
+                          key={format}
+                          onClick={() => setSelectedFormat(format)}
+                          className="flex flex-col items-start py-3"
+                        >
+                          <span className="font-medium">{exportFormatLabels[format]}</span>
+                          <span className="text-xs text-muted-foreground mt-1">
+                            {exportFormatDescriptions[format]}
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <Button onClick={handleGenerate} className="w-full">
+                  {exportFormatLabels[selectedFormat]} Generieren
+                </Button>
+              </div>
             </div>
           ) : (
             <>
