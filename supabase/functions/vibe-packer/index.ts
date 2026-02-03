@@ -21,19 +21,19 @@ interface RequestBody {
     gaps: Array<{ id: string; description: string; severity: string; resolved: boolean }>
   }
   messages: Array<{ role: string; content: string }>
-  part?: 1 | 2  // Which part to generate
+  part?: 1 | 2 | 3  // Which part to generate (standard uses 3 parts, others use 2)
   format?: ExportFormat  // Export format for different vibe-coding tools
 }
 
-function getSystemPrompt(part: 1 | 2, format: ExportFormat = 'standard'): string {
+function getSystemPrompt(part: 1 | 2 | 3, format: ExportFormat = 'standard'): string {
   if (format === 'lovable') {
-    return getLovableSystemPrompt(part)
+    return getLovableSystemPrompt(part as 1 | 2)
   }
   if (format === 'claude-code') {
-    return getClaudeCodeSystemPrompt(part)
+    return getClaudeCodeSystemPrompt(part as 1 | 2)
   }
   if (format === 'firebase-studio') {
-    return getFirebaseStudioSystemPrompt(part)
+    return getFirebaseStudioSystemPrompt(part as 1 | 2)
   }
   return getStandardSystemPrompt(part)
 }
@@ -400,11 +400,11 @@ WICHTIG:
 - Beende IMMER mit "✅ **FIREBASE STUDIO PROMPT VOLLSTÄNDIG**"`
 }
 
-function getStandardSystemPrompt(part: 1 | 2): string {
+function getStandardSystemPrompt(part: 1 | 2 | 3): string {
   if (part === 1) {
     return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
 
-Du schreibst TEIL 1 des PRD (Sections 1-5).
+Du schreibst TEIL 1 des PRD (Sections 1-4).
 
 STRUKTUR FÜR TEIL 1:
 
@@ -414,7 +414,17 @@ STRUKTUR FÜR TEIL 1:
 ---
 
 ## Inhaltsverzeichnis
-(Vollständige Liste aller 11 Sections mit Anchor-Links)
+1. Executive Summary
+2. Problem Statement
+3. Goals & Success Metrics
+4. User Stories
+5. Technical Architecture
+6. API Specifications
+7. Data Models
+8. Security Considerations
+9. Open Questions / Gaps
+10. Implementation Phases
+11. Appendix
 
 ---
 
@@ -428,28 +438,53 @@ Aktuelle Herausforderungen, Business Impact (detailliert)
 Geschäftsziele und technische Ziele als Tabellen, messbare KPIs
 
 ## 4. User Stories
-Gruppiert nach Benutzerrolle, ALLE relevanten User Stories auflisten
-
-## 5. Technical Architecture
-DETAILLIERT für JEDEN Node im Graph:
-- Architektur-Übersicht mit Mermaid-Diagramm
-- Für jeden Node: Name, Typ, Verantwortlichkeiten, Schnittstellen, Technologie
-- Datenflüsse basierend auf Edges
+Gruppiert nach Benutzerrolle, ALLE relevanten User Stories auflisten. Für jede Rolle mind. 5-10 User Stories.
 
 ---
-**[TEIL 1 ENDE - FORTSETZUNG IN TEIL 2]**
+**[FORTSETZUNG IN TEIL 2]**
 
 WICHTIG:
-- Schreibe alle Details aus den Node-Beschreibungen
-- Nutze die zusätzlichen Node-Daten für technische Spezifikationen
-- Beende mit dem Marker "[TEIL 1 ENDE - FORTSETZUNG IN TEIL 2]"`
+- Schreibe ALLE User Stories vollständig aus
+- Beende mit dem Marker "[FORTSETZUNG IN TEIL 2]"`
+  }
+
+  if (part === 2) {
+    return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
+
+Du schreibst TEIL 2 des PRD (Section 5: Technical Architecture). Teil 1 wurde bereits erstellt.
+
+STRUKTUR FÜR TEIL 2 (beginne direkt mit Section 5):
+
+## 5. Technical Architecture
+
+### 5.1 Architektur-Übersicht
+Erstelle ein Mermaid-Diagramm das alle Komponenten und deren Verbindungen zeigt.
+
+### 5.2 Komponenten-Details
+Für JEDEN Node im Graph schreibe einen detaillierten Abschnitt:
+- **Name und Typ**
+- **Verantwortlichkeiten**: Was macht diese Komponente?
+- **Schnittstellen**: Welche APIs/Protokolle werden verwendet?
+- **Technologie**: Welche Technologien/Frameworks werden eingesetzt?
+- **Abhängigkeiten**: Von welchen anderen Komponenten hängt sie ab?
+
+### 5.3 Datenflüsse
+Beschreibe die wichtigsten Datenflüsse basierend auf den Edges im Graph.
+
+---
+**[FORTSETZUNG IN TEIL 3]**
+
+WICHTIG:
+- Beschreibe JEDEN Node ausführlich
+- Nutze alle verfügbaren Node-Daten
+- Beende mit dem Marker "[FORTSETZUNG IN TEIL 3]"`
   }
 
   return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
 
-Du schreibst TEIL 2 des PRD (Sections 6-11). Teil 1 wurde bereits erstellt.
+Du schreibst TEIL 3 des PRD (Sections 6-11). Teile 1 und 2 wurden bereits erstellt.
 
-STRUKTUR FÜR TEIL 2 (beginne direkt mit Section 6):
+STRUKTUR FÜR TEIL 3 (beginne direkt mit Section 6):
 
 ## 6. API Specifications
 Für jeden relevanten Service: Endpoints, Methods, Request/Response-Beispiele
@@ -480,7 +515,7 @@ WICHTIG:
 - Nutze die Node-Informationen für API und Data Models`
 }
 
-function buildUserPrompt(body: RequestBody, part: 1 | 2, format: ExportFormat = 'standard'): string {
+function buildUserPrompt(body: RequestBody, part: 1 | 2 | 3, format: ExportFormat = 'standard'): string {
   const { projectName, projectDescription, graph, messages } = body
 
   const nodesText = graph.nodes
@@ -524,9 +559,8 @@ ${extraData ? `- Zusätzliche Daten:\n${extraData}` : ''}`
   }
 
   const formatName = formatNames[format]
-  const partInfo = part === 1
-    ? `Erstelle TEIL 1 des ${formatName}:`
-    : `Erstelle TEIL 2 des ${formatName}:`
+  const totalParts = format === 'standard' ? 3 : 2
+  const partInfo = `Erstelle TEIL ${part} von ${totalParts} des ${formatName}:`
 
   return `# Projekt: ${projectName}
 
@@ -562,7 +596,7 @@ ${conversationSummary}
 ${partInfo}`
 }
 
-async function generatePart(body: RequestBody, part: 1 | 2): Promise<ReadableStream> {
+async function generatePart(body: RequestBody, part: 1 | 2 | 3): Promise<ReadableStream> {
   const format = body.format || 'standard'
   const userPrompt = buildUserPrompt(body, part, format)
   const systemPrompt = getSystemPrompt(part, format)

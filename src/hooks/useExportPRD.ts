@@ -22,7 +22,7 @@ interface StreamCallbacks {
   onChunk?: (text: string) => void
   onComplete?: (fullText: string) => void
   onError?: (error: string) => void
-  onPartComplete?: (part: 1 | 2) => void
+  onPartComplete?: (part: 1 | 2 | 3) => void
 }
 
 interface GeneratePRDOptions extends StreamCallbacks {
@@ -32,7 +32,7 @@ interface GeneratePRDOptions extends StreamCallbacks {
 export function useExportPRD() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [streamedContent, setStreamedContent] = useState('')
-  const [currentPart, setCurrentPart] = useState<1 | 2 | null>(null)
+  const [currentPart, setCurrentPart] = useState<1 | 2 | 3 | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const { currentProject, messages, nodes, edges, gaps } = useProjectStore()
 
@@ -150,9 +150,43 @@ export function useExportPRD() {
       fullText = await processStream(response2, fullText, setStreamedContent, options)
       options?.onPartComplete?.(2)
 
+      // Check if aborted
+      if (abortControllerRef.current?.signal.aborted) {
+        return null
+      }
+
+      // For standard format, generate Part 3
+      if (format === 'standard') {
+        setCurrentPart(3)
+        fullText += '\n\n'
+        setStreamedContent(fullText)
+
+        const response3 = await fetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ ...baseBody, part: 3 }),
+          signal: abortControllerRef.current.signal,
+        })
+
+        if (!response3.ok) {
+          const errorData = await response3.json().catch(() => ({ error: 'Unknown error' }))
+          throw new Error(errorData.error || `HTTP ${response3.status}`)
+        }
+
+        fullText = await processStream(response3, fullText, setStreamedContent, options)
+        options?.onPartComplete?.(3)
+      }
+
       // Clean up markers
       fullText = fullText
+        .replace(/\*\*\[FORTSETZUNG IN TEIL 2\]\*\*/g, '')
+        .replace(/\*\*\[FORTSETZUNG IN TEIL 3\]\*\*/g, '')
         .replace(/\*\*\[TEIL 1 ENDE - FORTSETZUNG IN TEIL 2\]\*\*/g, '')
+        .replace(/---\s*\n\s*\n\s*##\s*5\./g, '---\n\n## 5.')
         .replace(/---\s*\n\s*\n\s*##\s*6\./g, '---\n\n## 6.')
         .replace(/---\s*\n\s*\n\s*##\s*Backend/g, '---\n\n## Backend')
         .replace(/---\s*\n\s*\n\s*##\s*Commands/g, '---\n\n## Commands')
