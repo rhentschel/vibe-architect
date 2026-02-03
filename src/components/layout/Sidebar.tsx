@@ -52,13 +52,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-30 bg-black/30"
           onClick={onClose}
         />
       )}
       <aside
         className={cn(
-          'fixed left-0 top-14 z-50 h-[calc(100vh-3.5rem)] border-r bg-background transition-all duration-300 md:static md:translate-x-0',
+          'fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] border-r bg-background transition-all duration-300',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           collapsed ? 'w-14' : 'w-72'
         )}
