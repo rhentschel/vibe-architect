@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ReactFlowProvider } from 'reactflow'
 import { Trash2 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
+import { Sidebar } from '@/components/layout/Sidebar'
 import { SplitViewLayout } from '@/components/layout/SplitViewLayout'
 import { GraphCanvas } from '@/components/features/graph/GraphCanvas'
 import { ChatInterface } from '@/components/features/chat/ChatInterface'
@@ -26,6 +27,7 @@ import { useProjectStore } from '@/lib/store/useProjectStore'
 
 export default function App() {
   const { user, signOut } = useAuth()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false)
   const [showProjectsDialog, setShowProjectsDialog] = useState(false)
   const [showExportDialog, setShowExportDialog] = useState(false)
@@ -70,6 +72,7 @@ export default function App() {
   return (
     <div className="flex h-screen flex-col">
       <Header
+        onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         onNewProject={() => setShowNewProjectDialog(true)}
         onOpenProjects={() => setShowProjectsDialog(true)}
         onSettings={() => setShowSettingsDialog(true)}
@@ -78,9 +81,12 @@ export default function App() {
         onLogout={signOut}
         userName={user?.email}
         isOwner={isOwner}
+        sidebarOpen={sidebarOpen}
       />
 
       <div className="flex flex-1 overflow-hidden">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
         <main className="flex-1 overflow-hidden">
           {currentProject ? (
             <ReactFlowProvider>

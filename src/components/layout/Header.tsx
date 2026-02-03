@@ -1,8 +1,9 @@
-import { LogOut, Plus, FolderOpen, Settings, FileText, Users } from 'lucide-react'
+import { LogOut, Plus, FolderOpen, Settings, FileText, Users, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 
 interface HeaderProps {
+  onMenuToggle: () => void
   onNewProject: () => void
   onOpenProjects: () => void
   onSettings: () => void
@@ -11,9 +12,10 @@ interface HeaderProps {
   onLogout: () => void
   userName?: string
   isOwner?: boolean
+  sidebarOpen?: boolean
 }
 
-export function Header({ onNewProject, onOpenProjects, onSettings, onGuestManagement, onExportPRD, onLogout, userName, isOwner = true }: HeaderProps) {
+export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings, onGuestManagement, onExportPRD, onLogout, userName, isOwner = true, sidebarOpen = false }: HeaderProps) {
   const { currentProject, nodes } = useProjectStore()
 
   return (
@@ -60,6 +62,16 @@ export function Header({ onNewProject, onOpenProjects, onSettings, onGuestManage
         <Button variant="ghost" size="sm" onClick={onOpenProjects} className="rounded-lg">
           <FolderOpen className="mr-1.5 h-4 w-4" />
           <span className="hidden sm:inline">Projekte</span>
+        </Button>
+        <Button
+          variant={sidebarOpen ? "secondary" : "ghost"}
+          size="sm"
+          onClick={onMenuToggle}
+          className="rounded-lg"
+          title="Logic Gaps"
+        >
+          <AlertTriangle className="mr-1.5 h-4 w-4" />
+          <span className="hidden sm:inline">Gaps</span>
         </Button>
         {isOwner && currentProject && onGuestManagement && (
           <Button variant="ghost" size="icon" onClick={onGuestManagement} title="Gäste verwalten" className="rounded-lg">
