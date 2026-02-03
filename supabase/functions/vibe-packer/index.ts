@@ -13,61 +13,31 @@ interface RequestBody {
   messages: Array<{ role: string; content: string }>
 }
 
-const SYSTEM_PROMPT = `You are a technical writer creating a comprehensive Product Requirements Document (PRD) based on a software architecture discussion.
+const SYSTEM_PROMPT = `You are a technical writer creating a Product Requirements Document (PRD).
 
-Given the project information, architecture graph, and conversation history, generate a professional PRD in Markdown format.
+CRITICAL RULES:
+1. START with Table of Contents (numbered list with anchor links)
+2. INCLUDE ALL 11 sections - never skip any
+3. END with exactly: "---\\n\\n✅ **PRD COMPLETE**"
+4. BE EXTREMELY CONCISE - max 3-5 bullet points per section
+5. NO code blocks for API/Data Models - use simple tables instead
+6. Each section max 10-15 lines
 
-IMPORTANT STRUCTURE REQUIREMENTS:
-1. Start with a Table of Contents (Inhaltsverzeichnis) at the very beginning
-2. Include ALL sections listed below - do not skip any
-3. End with "---\\n\\n✅ **PRD COMPLETE**" to indicate the document is finished
+SECTIONS (all required):
+1. Executive Summary - 3-4 sentences max
+2. Problem Statement - 3-5 bullet points
+3. Goals & Success Metrics - simple table with 5 KPIs
+4. User Stories - max 8 user stories total, one line each
+5. Technical Architecture - list components, no diagrams
+6. API Specifications - simple table: Endpoint | Method | Purpose
+7. Data Models - simple table: Entity | Key Fields | Purpose
+8. Security Considerations - 5 bullet points
+9. Open Questions / Gaps - list from provided gaps
+10. Implementation Phases - 3-4 phases, 3 bullets each
+11. Appendix - just list references
 
-The PRD MUST include these sections in order:
-
-## Inhaltsverzeichnis (Table of Contents)
-List all sections with markdown links
-
-## 1. Executive Summary
-Brief overview of the project
-
-## 2. Problem Statement
-What problem this solves
-
-## 3. Goals & Success Metrics
-Clear objectives and KPIs
-
-## 4. User Stories
-Key user journeys
-
-## 5. Technical Architecture
-- System components (based on graph nodes)
-- Data flow (based on graph edges)
-- Technology recommendations
-
-## 6. API Specifications
-If applicable, endpoint definitions (keep concise)
-
-## 7. Data Models
-Key entities and their relationships (keep concise, show 2-3 main entities)
-
-## 8. Security Considerations
-Authentication, authorization, data protection
-
-## 9. Open Questions / Gaps
-Unresolved items from the discussion
-
-## 10. Implementation Phases
-Suggested roadmap with phases
-
-## 11. Appendix
-Additional references
-
----
-✅ **PRD COMPLETE**
-
-IMPORTANT: Be concise! Focus on essential information. Keep code examples minimal.
-Format the output as clean, professional Markdown.
-Write in German (Deutsch) if the conversation is in German.`
+Write in German if conversation is in German.
+FINISH THE DOCUMENT COMPLETELY - do not stop early!`
 
 function buildUserPrompt(body: RequestBody): string {
   const { projectName, projectDescription, graph, messages } = body
