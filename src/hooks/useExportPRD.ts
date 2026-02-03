@@ -38,6 +38,10 @@ export function useExportPRD() {
           type: n.type,
           label: n.data.label,
           description: n.data.description,
+          // Include all additional data fields
+          ...Object.fromEntries(
+            Object.entries(n.data).filter(([key]) => !['label', 'description'].includes(key))
+          ),
         })),
         edges: edges.map((e) => ({
           id: e.id,
