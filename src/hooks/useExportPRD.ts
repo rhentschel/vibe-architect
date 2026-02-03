@@ -6,11 +6,13 @@ interface StreamCallbacks {
   onChunk?: (text: string) => void
   onComplete?: (fullText: string) => void
   onError?: (error: string) => void
+  onPartComplete?: (part: 1 | 2) => void
 }
 
 export function useExportPRD() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [streamedContent, setStreamedContent] = useState('')
+  const [currentPart, setCurrentPart] = useState<1 | 2 | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const { currentProject, messages, nodes, edges, gaps } = useProjectStore()
 
@@ -20,6 +22,7 @@ export function useExportPRD() {
       abortControllerRef.current = null
     }
     setIsGenerating(false)
+    setCurrentPart(null)
   }, [])
 
   const generatePRD = useCallback(async (callbacks?: StreamCallbacks): Promise<string | null> => {
@@ -29,6 +32,7 @@ export function useExportPRD() {
 
     setIsGenerating(true)
     setStreamedContent('')
+    setCurrentPart(1)
     abortControllerRef.current = new AbortController()
 
     try {
@@ -38,7 +42,6 @@ export function useExportPRD() {
           type: n.type,
           label: n.data.label,
           description: n.data.description,
-          // Include all additional data fields
           ...Object.fromEntries(
             Object.entries(n.data).filter(([key]) => !['label', 'description'].includes(key))
           ),
@@ -62,89 +65,77 @@ export function useExportPRD() {
         content: m.content,
       }))
 
-      // Get Supabase session for auth
       const { data: { session } } = await supabase.auth.getSession()
-
-      // Build the function URL
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
       const functionUrl = `${supabaseUrl}/functions/v1/vibe-packer`
 
-      const response = await fetch(functionUrl, {
+      const baseBody = {
+        projectName: currentProject.name,
+        projectDescription: currentProject.description,
+        graph: graphData,
+        messages: chatMessages,
+      }
+
+      let fullText = ''
+
+      // Generate Part 1
+      const response1 = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({
-          projectName: currentProject.name,
-          projectDescription: currentProject.description,
-          graph: graphData,
-          messages: chatMessages,
-        }),
+        body: JSON.stringify({ ...baseBody, part: 1 }),
         signal: abortControllerRef.current.signal,
       })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(errorData.error || `HTTP ${response.status}`)
+      if (!response1.ok) {
+        const errorData = await response1.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP ${response1.status}`)
       }
 
-      // Check if we're getting a stream or JSON
-      const contentType = response.headers.get('content-type') || ''
+      fullText = await processStream(response1, fullText, setStreamedContent, callbacks)
+      callbacks?.onPartComplete?.(1)
 
-      if (contentType.includes('text/event-stream')) {
-        // Handle streaming response
-        const reader = response.body?.getReader()
-        if (!reader) {
-          throw new Error('No response body')
-        }
-
-        const decoder = new TextDecoder()
-        let fullText = ''
-        let buffer = ''
-
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6).trim()
-              if (data === '[DONE]') {
-                continue
-              }
-              try {
-                const parsed = JSON.parse(data)
-                if (parsed.text) {
-                  fullText += parsed.text
-                  setStreamedContent(fullText)
-                  callbacks?.onChunk?.(parsed.text)
-                }
-              } catch {
-                // Ignore parse errors
-              }
-            }
-          }
-        }
-
-        callbacks?.onComplete?.(fullText)
-        return fullText || null
-      } else {
-        // Handle non-streaming JSON response (fallback)
-        const data = await response.json()
-        if (data.error) {
-          throw new Error(data.error)
-        }
-        const prd = data.prd || ''
-        setStreamedContent(prd)
-        callbacks?.onComplete?.(prd)
-        return prd
+      // Check if aborted
+      if (abortControllerRef.current?.signal.aborted) {
+        return null
       }
+
+      // Generate Part 2
+      setCurrentPart(2)
+      fullText += '\n\n'
+      setStreamedContent(fullText)
+
+      const response2 = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ ...baseBody, part: 2 }),
+        signal: abortControllerRef.current.signal,
+      })
+
+      if (!response2.ok) {
+        const errorData = await response2.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP ${response2.status}`)
+      }
+
+      fullText = await processStream(response2, fullText, setStreamedContent, callbacks)
+      callbacks?.onPartComplete?.(2)
+
+      // Clean up markers
+      fullText = fullText
+        .replace(/\*\*\[TEIL 1 ENDE - FORTSETZUNG IN TEIL 2\]\*\*/g, '')
+        .replace(/---\s*\n\s*\n\s*##\s*6\./g, '---\n\n## 6.')
+
+      setStreamedContent(fullText)
+      callbacks?.onComplete?.(fullText)
+      return fullText
+
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         return null
@@ -154,6 +145,7 @@ export function useExportPRD() {
       return `# Fehler bei der PRD-Generierung\n\n${errorMessage}`
     } finally {
       setIsGenerating(false)
+      setCurrentPart(null)
       abortControllerRef.current = null
     }
   }, [currentProject, messages, nodes, edges, gaps])
@@ -162,6 +154,64 @@ export function useExportPRD() {
     generatePRD,
     isGenerating,
     streamedContent,
+    currentPart,
     cancelGeneration,
   }
+}
+
+async function processStream(
+  response: Response,
+  currentContent: string,
+  setContent: (content: string) => void,
+  callbacks?: StreamCallbacks
+): Promise<string> {
+  const contentType = response.headers.get('content-type') || ''
+  let fullText = currentContent
+
+  if (contentType.includes('text/event-stream')) {
+    const reader = response.body?.getReader()
+    if (!reader) {
+      throw new Error('No response body')
+    }
+
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim()
+          if (data === '[DONE]') {
+            continue
+          }
+          try {
+            const parsed = JSON.parse(data)
+            if (parsed.text) {
+              fullText += parsed.text
+              setContent(fullText)
+              callbacks?.onChunk?.(parsed.text)
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
+      }
+    }
+  } else {
+    const data = await response.json()
+    if (data.error) {
+      throw new Error(data.error)
+    }
+    fullText = data.prd || ''
+    setContent(fullText)
+  }
+
+  return fullText
 }

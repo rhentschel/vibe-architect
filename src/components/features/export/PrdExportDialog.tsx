@@ -24,7 +24,7 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
   const [prdContent, setPrdContent] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const { currentProject } = useProjectStore()
-  const { generatePRD, isGenerating, streamedContent, cancelGeneration } = useExportPRD()
+  const { generatePRD, isGenerating, streamedContent, currentPart, cancelGeneration } = useExportPRD()
 
   const handleGenerate = async () => {
     const content = await generatePRD({
@@ -105,7 +105,9 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
               {isGenerating && (
                 <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>PRD wird generiert...</span>
+                  <span>
+                    PRD wird generiert... {currentPart && `(Teil ${currentPart}/2)`}
+                  </span>
                   <Button
                     variant="ghost"
                     size="sm"
