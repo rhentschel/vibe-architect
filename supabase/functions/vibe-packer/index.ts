@@ -17,25 +17,56 @@ const SYSTEM_PROMPT = `You are a technical writer creating a comprehensive Produ
 
 Given the project information, architecture graph, and conversation history, generate a professional PRD in Markdown format.
 
-The PRD should include:
-1. **Executive Summary** - Brief overview of the project
-2. **Problem Statement** - What problem this solves
-3. **Goals & Success Metrics** - Clear objectives and KPIs
-4. **User Stories** - Key user journeys
-5. **Technical Architecture**
-   - System components (based on graph nodes)
-   - Data flow (based on graph edges)
-   - Technology recommendations
-6. **API Specifications** - If applicable, endpoint definitions
-7. **Data Models** - Key entities and their relationships
-8. **Security Considerations** - Authentication, authorization, data protection
-9. **Open Questions / Gaps** - Unresolved items from the discussion
-10. **Implementation Phases** - Suggested roadmap
-11. **Appendix** - Additional diagrams or references
+IMPORTANT STRUCTURE REQUIREMENTS:
+1. Start with a Table of Contents (Inhaltsverzeichnis) at the very beginning
+2. Include ALL sections listed below - do not skip any
+3. End with "---\\n\\n✅ **PRD COMPLETE**" to indicate the document is finished
 
+The PRD MUST include these sections in order:
+
+## Inhaltsverzeichnis (Table of Contents)
+List all sections with markdown links
+
+## 1. Executive Summary
+Brief overview of the project
+
+## 2. Problem Statement
+What problem this solves
+
+## 3. Goals & Success Metrics
+Clear objectives and KPIs
+
+## 4. User Stories
+Key user journeys
+
+## 5. Technical Architecture
+- System components (based on graph nodes)
+- Data flow (based on graph edges)
+- Technology recommendations
+
+## 6. API Specifications
+If applicable, endpoint definitions (keep concise)
+
+## 7. Data Models
+Key entities and their relationships (keep concise, show 2-3 main entities)
+
+## 8. Security Considerations
+Authentication, authorization, data protection
+
+## 9. Open Questions / Gaps
+Unresolved items from the discussion
+
+## 10. Implementation Phases
+Suggested roadmap with phases
+
+## 11. Appendix
+Additional references
+
+---
+✅ **PRD COMPLETE**
+
+IMPORTANT: Be concise! Focus on essential information. Keep code examples minimal.
 Format the output as clean, professional Markdown.
-Use the conversation context to fill in details where the graph alone is insufficient.
-Be specific and actionable in recommendations.
 Write in German (Deutsch) if the conversation is in German.`
 
 function buildUserPrompt(body: RequestBody): string {
@@ -103,7 +134,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 8192,
+        max_tokens: 16000,
         stream: true,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
