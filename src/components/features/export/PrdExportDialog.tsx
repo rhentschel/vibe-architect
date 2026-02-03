@@ -155,7 +155,7 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
                 <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>
-                    PRD wird generiert... {currentPart && `(Teil ${currentPart}/${selectedFormat === 'standard' ? 3 : 2})`}
+                    PRD wird generiert... {currentPart && `(Teil ${currentPart}/${selectedFormat === 'standard' ? 4 : 2})`}
                   </span>
                   <Button
                     variant="ghost"

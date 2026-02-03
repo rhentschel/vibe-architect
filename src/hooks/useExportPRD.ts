@@ -22,7 +22,7 @@ interface StreamCallbacks {
   onChunk?: (text: string) => void
   onComplete?: (fullText: string) => void
   onError?: (error: string) => void
-  onPartComplete?: (part: 1 | 2 | 3) => void
+  onPartComplete?: (part: 1 | 2 | 3 | 4) => void
 }
 
 interface GeneratePRDOptions extends StreamCallbacks {
@@ -32,7 +32,7 @@ interface GeneratePRDOptions extends StreamCallbacks {
 export function useExportPRD() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [streamedContent, setStreamedContent] = useState('')
-  const [currentPart, setCurrentPart] = useState<1 | 2 | 3 | null>(null)
+  const [currentPart, setCurrentPart] = useState<1 | 2 | 3 | 4 | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const { currentProject, messages, nodes, edges, gaps } = useProjectStore()
 
@@ -155,8 +155,9 @@ export function useExportPRD() {
         return null
       }
 
-      // For standard format, generate Part 3
+      // For standard format, generate Parts 3 and 4
       if (format === 'standard') {
+        // Part 3
         setCurrentPart(3)
         fullText += '\n\n'
         setStreamedContent(fullText)
@@ -179,13 +180,42 @@ export function useExportPRD() {
 
         fullText = await processStream(response3, fullText, setStreamedContent, options)
         options?.onPartComplete?.(3)
+
+        // Check if aborted
+        if (abortControllerRef.current?.signal.aborted) {
+          return null
+        }
+
+        // Part 4
+        setCurrentPart(4)
+        fullText += '\n\n'
+        setStreamedContent(fullText)
+
+        const response4 = await fetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ ...baseBody, part: 4 }),
+          signal: abortControllerRef.current.signal,
+        })
+
+        if (!response4.ok) {
+          const errorData = await response4.json().catch(() => ({ error: 'Unknown error' }))
+          throw new Error(errorData.error || `HTTP ${response4.status}`)
+        }
+
+        fullText = await processStream(response4, fullText, setStreamedContent, options)
+        options?.onPartComplete?.(4)
       }
 
       // Clean up markers
       fullText = fullText
-        .replace(/\*\*\[FORTSETZUNG IN TEIL 2\]\*\*/g, '')
-        .replace(/\*\*\[FORTSETZUNG IN TEIL 3\]\*\*/g, '')
+        .replace(/\*\*\[FORTSETZUNG IN TEIL \d\]\*\*/g, '')
         .replace(/\*\*\[TEIL 1 ENDE - FORTSETZUNG IN TEIL 2\]\*\*/g, '')
+        .replace(/---\s*\n\s*\n\s*##\s*4\./g, '---\n\n## 4.')
         .replace(/---\s*\n\s*\n\s*##\s*5\./g, '---\n\n## 5.')
         .replace(/---\s*\n\s*\n\s*##\s*6\./g, '---\n\n## 6.')
         .replace(/---\s*\n\s*\n\s*##\s*Backend/g, '---\n\n## Backend')

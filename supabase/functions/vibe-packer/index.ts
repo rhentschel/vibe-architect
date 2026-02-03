@@ -21,11 +21,11 @@ interface RequestBody {
     gaps: Array<{ id: string; description: string; severity: string; resolved: boolean }>
   }
   messages: Array<{ role: string; content: string }>
-  part?: 1 | 2 | 3  // Which part to generate (standard uses 3 parts, others use 2)
+  part?: 1 | 2 | 3 | 4  // Which part to generate (standard uses 4 parts, others use 2)
   format?: ExportFormat  // Export format for different vibe-coding tools
 }
 
-function getSystemPrompt(part: 1 | 2 | 3, format: ExportFormat = 'standard'): string {
+function getSystemPrompt(part: 1 | 2 | 3 | 4, format: ExportFormat = 'standard'): string {
   if (format === 'lovable') {
     return getLovableSystemPrompt(part as 1 | 2)
   }
@@ -400,11 +400,11 @@ WICHTIG:
 - Beende IMMER mit "✅ **FIREBASE STUDIO PROMPT VOLLSTÄNDIG**"`
 }
 
-function getStandardSystemPrompt(part: 1 | 2 | 3): string {
+function getStandardSystemPrompt(part: 1 | 2 | 3 | 4): string {
   if (part === 1) {
     return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
 
-Du schreibst TEIL 1 des PRD (Sections 1-4).
+Du schreibst TEIL 1 des PRD (Sections 1-3).
 
 STRUKTUR FÜR TEIL 1:
 
@@ -437,23 +437,39 @@ Aktuelle Herausforderungen, Business Impact (detailliert)
 ## 3. Goals & Success Metrics
 Geschäftsziele und technische Ziele als Tabellen, messbare KPIs
 
-## 4. User Stories
-Gruppiert nach Benutzerrolle, ALLE relevanten User Stories auflisten. Für jede Rolle mind. 5-10 User Stories.
-
 ---
-**[FORTSETZUNG IN TEIL 2]**
-
-WICHTIG:
-- Schreibe ALLE User Stories vollständig aus
-- Beende mit dem Marker "[FORTSETZUNG IN TEIL 2]"`
+**[FORTSETZUNG IN TEIL 2]**`
   }
 
   if (part === 2) {
     return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
 
-Du schreibst TEIL 2 des PRD (Section 5: Technical Architecture). Teil 1 wurde bereits erstellt.
+Du schreibst TEIL 2 des PRD (Section 4: User Stories). Teil 1 wurde bereits erstellt.
 
-STRUKTUR FÜR TEIL 2 (beginne direkt mit Section 5):
+STRUKTUR FÜR TEIL 2 (beginne direkt mit Section 4):
+
+## 4. User Stories
+
+Gruppiert nach Benutzerrolle. Für JEDE Rolle schreibe 8-15 detaillierte User Stories.
+Format: "Als [Rolle] möchte ich [Aktion], um [Nutzen]."
+
+Rollen basierend auf dem System:
+- Mieter
+- Außendienst-Mitarbeiter
+- Sachbearbeiter (Innendienst)
+- Verwaltungsleitung
+- System-Administrator
+
+---
+**[FORTSETZUNG IN TEIL 3]**`
+  }
+
+  if (part === 3) {
+    return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
+
+Du schreibst TEIL 3 des PRD (Section 5: Technical Architecture). Teile 1-2 wurden bereits erstellt.
+
+STRUKTUR FÜR TEIL 3 (beginne direkt mit Section 5):
 
 ## 5. Technical Architecture
 
@@ -472,19 +488,16 @@ Für JEDEN Node im Graph schreibe einen detaillierten Abschnitt:
 Beschreibe die wichtigsten Datenflüsse basierend auf den Edges im Graph.
 
 ---
-**[FORTSETZUNG IN TEIL 3]**
+**[FORTSETZUNG IN TEIL 4]**
 
-WICHTIG:
-- Beschreibe JEDEN Node ausführlich
-- Nutze alle verfügbaren Node-Daten
-- Beende mit dem Marker "[FORTSETZUNG IN TEIL 3]"`
+WICHTIG: Beschreibe JEDEN Node ausführlich mit allen verfügbaren Daten.`
   }
 
   return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
 
-Du schreibst TEIL 3 des PRD (Sections 6-11). Teile 1 und 2 wurden bereits erstellt.
+Du schreibst TEIL 4 des PRD (Sections 6-11). Teile 1-3 wurden bereits erstellt.
 
-STRUKTUR FÜR TEIL 3 (beginne direkt mit Section 6):
+STRUKTUR FÜR TEIL 4 (beginne direkt mit Section 6):
 
 ## 6. API Specifications
 Für jeden relevanten Service: Endpoints, Methods, Request/Response-Beispiele
@@ -511,11 +524,10 @@ Referenzen, Glossar, technische Details, Diagramm-Legende
 
 WICHTIG:
 - Schreibe alle Sections vollständig aus
-- Beende IMMER mit "✅ **PRD VOLLSTÄNDIG**"
-- Nutze die Node-Informationen für API und Data Models`
+- Beende IMMER mit "✅ **PRD VOLLSTÄNDIG**"`
 }
 
-function buildUserPrompt(body: RequestBody, part: 1 | 2 | 3, format: ExportFormat = 'standard'): string {
+function buildUserPrompt(body: RequestBody, part: 1 | 2 | 3 | 4, format: ExportFormat = 'standard'): string {
   const { projectName, projectDescription, graph, messages } = body
 
   const nodesText = graph.nodes
@@ -559,7 +571,7 @@ ${extraData ? `- Zusätzliche Daten:\n${extraData}` : ''}`
   }
 
   const formatName = formatNames[format]
-  const totalParts = format === 'standard' ? 3 : 2
+  const totalParts = format === 'standard' ? 4 : 2
   const partInfo = `Erstelle TEIL ${part} von ${totalParts} des ${formatName}:`
 
   return `# Projekt: ${projectName}
@@ -596,7 +608,7 @@ ${conversationSummary}
 ${partInfo}`
 }
 
-async function generatePart(body: RequestBody, part: 1 | 2 | 3): Promise<ReadableStream> {
+async function generatePart(body: RequestBody, part: 1 | 2 | 3 | 4): Promise<ReadableStream> {
   const format = body.format || 'standard'
   const userPrompt = buildUserPrompt(body, part, format)
   const systemPrompt = getSystemPrompt(part, format)
@@ -738,7 +750,10 @@ Deno.serve(async (req) => {
 
     // Clean up the content - remove part markers
     fullContent = fullContent
+      .replace(/\*\*\[FORTSETZUNG IN TEIL \d\]\*\*/g, '')
       .replace(/\*\*\[TEIL 1 ENDE - FORTSETZUNG IN TEIL 2\]\*\*/g, '')
+      .replace(/---\s*\n\s*\n\s*##\s*4\./g, '---\n\n## 4.')
+      .replace(/---\s*\n\s*\n\s*##\s*5\./g, '---\n\n## 5.')
       .replace(/---\s*\n\s*\n\s*##\s*6\./g, '---\n\n## 6.')
       .replace(/---\s*\n\s*\n\s*##\s*Backend/g, '---\n\n## Backend')
       .replace(/---\s*\n\s*\n\s*##\s*Commands/g, '---\n\n## Commands')
