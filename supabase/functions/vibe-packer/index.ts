@@ -609,8 +609,8 @@ async function generatePart(body: RequestBody, part: 1 | 2 | 3): Promise<Readabl
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 8192,
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 16000,
       stream: true,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
