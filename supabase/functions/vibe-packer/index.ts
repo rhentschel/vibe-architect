@@ -38,6 +38,46 @@ Use the conversation context to fill in details where the graph alone is insuffi
 Be specific and actionable in recommendations.
 Write in German (Deutsch) if the conversation is in German.`
 
+function buildUserPrompt(body: RequestBody): string {
+  const { projectName, projectDescription, graph, messages } = body
+
+  const nodesText = graph.nodes
+    .map((n) => `- ${n.label} (${n.type}): ${n.description || 'No description'}`)
+    .join('\n')
+
+  const edgesText = graph.edges
+    .map((e) => `- ${e.source} -> ${e.target}: ${e.label || 'connected'}`)
+    .join('\n')
+
+  const gapsText = graph.gaps
+    .filter((g) => !g.resolved)
+    .map((g) => `- [${g.severity.toUpperCase()}] ${g.description}`)
+    .join('\n') || 'None'
+
+  const conversationSummary = messages
+    .slice(-30) // Keep last 30 messages for context
+    .map((m) => `${m.role}: ${m.content.slice(0, 1000)}`)
+    .join('\n\n')
+
+  return `Project Name: ${projectName}
+Project Description: ${projectDescription || 'Not provided'}
+
+Architecture Graph:
+Nodes (Components):
+${nodesText}
+
+Edges (Relationships):
+${edgesText}
+
+Unresolved Gaps:
+${gapsText}
+
+Conversation History (last 30 messages):
+${conversationSummary}
+
+Generate the PRD now:`
+}
+
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req)
   if (corsResponse) return corsResponse
@@ -50,30 +90,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { projectName, projectDescription, graph, messages } = (await req.json()) as RequestBody
+    const body = (await req.json()) as RequestBody
+    const userPrompt = buildUserPrompt(body)
 
-    const conversationSummary = messages
-      .map((m) => `${m.role}: ${m.content}`)
-      .join('\n\n')
-
-    const userPrompt = `Project Name: ${projectName}
-Project Description: ${projectDescription || 'Not provided'}
-
-Architecture Graph:
-Nodes (Components):
-${graph.nodes.map((n) => `- ${n.label} (${n.type}): ${n.description || 'No description'}`).join('\n')}
-
-Edges (Relationships):
-${graph.edges.map((e) => `- ${e.source} -> ${e.target}: ${e.label || 'connected'}`).join('\n')}
-
-Unresolved Gaps:
-${graph.gaps.filter((g) => !g.resolved).map((g) => `- [${g.severity.toUpperCase()}] ${g.description}`).join('\n') || 'None'}
-
-Conversation History:
-${conversationSummary}
-
-Generate the PRD now:`
-
+    // Use streaming for long responses
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -84,6 +104,7 @@ Generate the PRD now:`
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 8192,
+        stream: true,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
       }),
@@ -94,13 +115,49 @@ Generate the PRD now:`
       throw new Error(`Anthropic API error: ${response.status} - ${errorText}`)
     }
 
-    const data = await response.json()
-    const prdContent = data.content?.[0]?.text || ''
+    // Stream the response directly to the client
+    const streamHeaders = {
+      ...corsHeaders,
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    }
 
-    return new Response(
-      JSON.stringify({ prd: prdContent }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    // Transform the Anthropic SSE stream to extract just the text
+    const transformStream = new TransformStream({
+      transform(chunk, controller) {
+        const text = new TextDecoder().decode(chunk)
+        const lines = text.split('\n')
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            if (data === '[DONE]') {
+              controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'))
+              return
+            }
+            try {
+              const parsed = JSON.parse(data)
+              // Extract text from content_block_delta events
+              if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+                const textChunk = parsed.delta.text
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ text: textChunk })}\n\n`))
+              }
+              // Handle message_stop event
+              if (parsed.type === 'message_stop') {
+                controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'))
+              }
+            } catch {
+              // Ignore parse errors for non-JSON lines
+            }
+          }
+        }
+      },
+    })
+
+    const readable = response.body?.pipeThrough(transformStream)
+
+    return new Response(readable, { headers: streamHeaders })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return new Response(

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Download, Copy, Loader2, FileText, Check } from 'lucide-react'
+import { Download, Copy, Loader2, FileText, Check, X } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -24,26 +24,36 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
   const [prdContent, setPrdContent] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const { currentProject } = useProjectStore()
-  const { generatePRD, isGenerating } = useExportPRD()
+  const { generatePRD, isGenerating, streamedContent, cancelGeneration } = useExportPRD()
 
   const handleGenerate = async () => {
-    const content = await generatePRD()
+    const content = await generatePRD({
+      onComplete: (fullText) => {
+        setPrdContent(fullText)
+      },
+    })
     if (content) {
       setPrdContent(content)
     }
   }
 
+  const handleCancel = () => {
+    cancelGeneration()
+  }
+
   const handleCopy = async () => {
-    if (prdContent) {
-      await navigator.clipboard.writeText(prdContent)
+    const contentToCopy = prdContent || streamedContent
+    if (contentToCopy) {
+      await navigator.clipboard.writeText(contentToCopy)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
   }
 
   const handleDownload = () => {
-    if (prdContent && currentProject) {
-      const blob = new Blob([prdContent], { type: 'text/markdown' })
+    const contentToDownload = prdContent || streamedContent
+    if (contentToDownload && currentProject) {
+      const blob = new Blob([contentToDownload], { type: 'text/markdown' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
@@ -54,9 +64,16 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
   }
 
   const handleClose = () => {
+    if (isGenerating) {
+      cancelGeneration()
+    }
     onOpenChange(false)
     setPrdContent(null)
   }
+
+  // Show streamed content while generating, or final content when done
+  const displayContent = prdContent || (isGenerating ? streamedContent : null)
+  const hasContent = displayContent && displayContent.length > 0
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -72,42 +89,51 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
         </DialogHeader>
 
         <div className="flex-1 min-h-0">
-          {!prdContent ? (
+          {!hasContent && !isGenerating ? (
             <div className="flex flex-col items-center justify-center py-12">
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    PRD wird generiert...
-                  </p>
-                </>
-              ) : (
-                <>
-                  <FileText className="h-12 w-12 text-muted-foreground" />
-                  <p className="mt-4 text-sm text-muted-foreground text-center max-w-sm">
-                    Klicke auf "Generieren", um ein vollständiges PRD basierend auf deiner
-                    Architektur und Konversation zu erstellen.
-                  </p>
-                  <Button onClick={handleGenerate} className="mt-6">
-                    PRD Generieren
-                  </Button>
-                </>
-              )}
+              <FileText className="h-12 w-12 text-muted-foreground" />
+              <p className="mt-4 text-sm text-muted-foreground text-center max-w-sm">
+                Klicke auf "Generieren", um ein vollständiges PRD basierend auf deiner
+                Architektur und Konversation zu erstellen.
+              </p>
+              <Button onClick={handleGenerate} className="mt-6">
+                PRD Generieren
+              </Button>
             </div>
           ) : (
-            <ScrollArea className="h-[60vh] rounded-lg border p-4">
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {prdContent}
-                </ReactMarkdown>
-              </div>
-            </ScrollArea>
+            <>
+              {isGenerating && (
+                <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>PRD wird generiert...</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCancel}
+                    className="ml-auto h-7 px-2"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Abbrechen
+                  </Button>
+                </div>
+              )}
+              <ScrollArea className="h-[60vh] rounded-lg border p-4">
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {displayContent || ''}
+                  </ReactMarkdown>
+                  {isGenerating && (
+                    <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+                  )}
+                </div>
+              </ScrollArea>
+            </>
           )}
         </div>
 
-        {prdContent && (
+        {hasContent && (
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={handleCopy}>
+            <Button variant="outline" onClick={handleCopy} disabled={isGenerating}>
               {copied ? (
                 <>
                   <Check className="mr-2 h-4 w-4" />
@@ -120,7 +146,7 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
                 </>
               )}
             </Button>
-            <Button onClick={handleDownload}>
+            <Button onClick={handleDownload} disabled={isGenerating}>
               <Download className="mr-2 h-4 w-4" />
               Als Markdown herunterladen
             </Button>
