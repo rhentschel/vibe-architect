@@ -42,230 +42,166 @@ function getSystemPrompt(part: 1 | 2 | 3 | 4 | 5 | 6, format: ExportFormat = 'st
     return getUserStoriesSystemPrompt()
   }
   if (format === 'dashboard') {
-    return getDashboardSystemPrompt(part as 1 | 2 | 3)
+    return getDashboardSystemPrompt(part as 1 | 2 | 3 | 4 | 5)
   }
   return getStandardSystemPrompt(part)
 }
 
-function getDashboardSystemPrompt(part: 1 | 2 | 3): string {
+function getDashboardSystemPrompt(part: 1 | 2 | 3 | 4 | 5): string {
   if (part === 1) {
-    return `Du bist ein erfahrener UI/UX Designer, spezialisiert auf Dashboard-Design und Datenvisualisierung.
+    return `Du bist ein erfahrener UI/UX Designer für Dashboard-Design.
 
-Du schreibst TEIL 1 des Dashboard UI/UX Designs (Design System & Layout).
-
-## AUSGABE-FORMAT
+Du schreibst TEIL 1 des Dashboard UI/UX Designs (Design System).
 
 # Dashboard UI/UX Design - [Projektname]
 
 ## 🎨 Design System
 
 ### Farbpalette
-Definiere eine passende Farbpalette mit Hex-Werten:
-- **Primary**: Haupt-Aktionen, aktive Elemente
+Definiere Farben mit Hex-Werten:
+- **Primary**: Haupt-Aktionen
 - **Secondary**: Erfolg, positive Trends
-- **Accent**: Warnungen, Highlights
+- **Accent**: Warnungen
 - **Danger**: Fehler, negative Trends
 - **Neutral**: Text, Borders
 - **Background**: Seiten-Hintergrund
 - **Surface**: Karten, Widgets
-- **Dark Mode**: Alternative Hintergrund
 
 ### Typografie
-- **Headlines**: Font, Gewicht, Größe
-- **Subheadings**: Font, Gewicht, Größe
-- **Body**: Font, Größe
-- **Small/Labels**: Font, Größe
-- **KPI-Zahlen**: Font, Größe (groß und prominent)
+- Headlines, Subheadings, Body, Labels, KPI-Zahlen
+- Font-Familie, Größen, Gewichte
 
 ### Spacing & Grid
-- **Base Unit**: z.B. 8px
-- **Padding Widgets**: z.B. 24px
-- **Gap zwischen Widgets**: z.B. 16px
-- **Border Radius**: Für Karten, Buttons, Inputs
-- **Grid**: Spalten, Gutter
+- Base Unit, Padding, Gap, Border-Radius, Grid-System
 
-### Schatten & Elevation
-- **Level 1** (Karten): CSS Shadow
-- **Level 2** (Hover): CSS Shadow
-- **Level 3** (Modals): CSS Shadow
+### Schatten
+- Level 1-3 mit CSS-Werten
 
 ---
+**[FORTSETZUNG IN TEIL 2]**`
+  }
+
+  if (part === 2) {
+    return `Du bist ein erfahrener UI/UX Designer für Dashboard-Design.
+
+Du schreibst TEIL 2 des Dashboard UI/UX Designs (Layout-Struktur).
 
 ## 📐 Layout-Struktur
 
 ### Header
-Beschreibe den Header mit ASCII-Mockup:
-- Höhe, Position der Elemente
+ASCII-Mockup mit:
 - Logo, Titel, Navigation, User-Menu
+- Höhe, Positionen
 
 ### Sidebar
-Beschreibe die Sidebar mit ASCII-Mockup:
-- Breite (normal/collapsed)
-- Menü-Punkte basierend auf der Architektur
-- Hover-States, aktive States
+ASCII-Mockup mit:
+- Menü-Punkte (basierend auf Architektur-Nodes)
+- Breite normal/collapsed
+- Hover/Active States
 
 ### Main Content Area
-- Max-Width, Padding
-- Hintergrundfarbe
+- Max-Width, Padding, Background
 
 ---
-
-**[FORTSETZUNG IN TEIL 2]**
-
-WICHTIG:
-- Nutze deutsche Sprache
-- ASCII-Mockups für Layout-Visualisierung
-- Alle Farben mit Hex-Werten`
+**[FORTSETZUNG IN TEIL 3]**`
   }
 
-  if (part === 2) {
-    return `Du bist ein erfahrener UI/UX Designer, spezialisiert auf Dashboard-Design.
+  if (part === 3) {
+    return `Du bist ein erfahrener UI/UX Designer für Dashboard-Design.
 
-Du schreibst TEIL 2 des Dashboard UI/UX Designs (Widgets & Charts).
+Du schreibst TEIL 3 des Dashboard UI/UX Designs (KPI-Karten & Charts).
 
 ## 🎯 KPI-Karten Design
 
-### KPI-Karten Grid
-Erstelle ein ASCII-Mockup für die KPI-Karten:
-- Zeige 4 KPI-Karten nebeneinander
-- Beschreibe jede Karte: Icon, Label, Wert, Trend, Sparkline
-
-### KPI-Karte Detail
-- **Größe**: Breite x Höhe
-- **Hover-Effekt**: Was passiert bei Hover?
-- **Klick-Verhalten**: Wohin führt der Klick?
+### KPI-Grid
+ASCII-Mockup: 4 KPI-Karten mit Icon, Label, Wert, Trend
 
 ### KPI-Varianten
-1. **Standard**: Beschreibung
-2. **Progress**: Mit Progress-Bar
-3. **Comparison**: Vergleichswerte
-4. **Mini**: Kompakte Version
+1. Standard, 2. Progress, 3. Comparison, 4. Mini
 
 ---
 
 ## 📊 Chart-Designs
 
-### Line Chart (Zeitverlauf)
-ASCII-Mockup eines Line Charts:
-- Achsen, Datenpunkte, Legende
-- Zeitraum-Toggle
-- Styling: Liniendicke, Farben, Fläche
+### Line Chart
+ASCII-Mockup mit Achsen, Legende, Zeitraum-Toggle
 
-### Bar Chart (Vergleich)
-ASCII-Mockup eines Bar Charts:
-- Horizontale oder vertikale Balken
-- Prozentangaben
-- Hover-Verhalten
+### Bar Chart
+ASCII-Mockup horizontal/vertikal
 
-### Donut/Pie Chart (Anteile)
-ASCII-Mockup:
-- Zentrale Zahl
-- Legende
-- Hover-Effekt
+### Donut Chart
+ASCII-Mockup mit zentraler Zahl
 
 ---
+**[FORTSETZUNG IN TEIL 4]**`
+  }
+
+  if (part === 4) {
+    return `Du bist ein erfahrener UI/UX Designer für Dashboard-Design.
+
+Du schreibst TEIL 4 des Dashboard UI/UX Designs (Tabellen & Feedback).
 
 ## 📋 Tabellen-Design
 
 ### Datentabelle
-ASCII-Mockup einer Tabelle:
-- Header mit Sortierung
+ASCII-Mockup mit:
+- Header, Sortierung, Filter
 - Zeilen mit Status-Badges
 - Aktions-Buttons
 - Pagination
 
-Styling:
-- Header-Background
-- Hover-States
-- Status-Badge-Farben
-
 ---
 
-**[FORTSETZUNG IN TEIL 3]**
-
-WICHTIG:
-- ASCII-Mockups für alle Widgets
-- Beschreibe Hover und Klick-Verhalten
-- Leite Inhalte aus der Architektur ab`
-  }
-
-  return `Du bist ein erfahrener UI/UX Designer, spezialisiert auf Dashboard-Design.
-
-Du schreibst TEIL 3 des Dashboard UI/UX Designs (Feedback, Responsive, Animationen).
-
-## 🔔 Benachrichtigungen & Feedback
+## 🔔 Benachrichtigungen
 
 ### Toast-Notifications
-ASCII-Mockups für verschiedene Toast-Typen:
-- Erfolg (grün)
-- Warnung (orange)
-- Fehler (rot)
-- Info (blau)
-
-Position, Animation, Auto-dismiss
+Erfolg, Warnung, Fehler, Info - Position, Animation
 
 ### Empty States
-ASCII-Mockup für leere Zustände:
-- Icon, Text, Call-to-Action
+ASCII-Mockup: Icon, Text, CTA
 
 ### Loading States
-- **Skeleton**: Beschreibung
-- **Spinner**: Größe, Farbe
-- **Progress**: Für längere Operationen
+Skeleton, Spinner, Progress
 
 ---
+**[FORTSETZUNG IN TEIL 5]**`
+  }
+
+  return `Du bist ein erfahrener UI/UX Designer für Dashboard-Design.
+
+Du schreibst TEIL 5 des Dashboard UI/UX Designs (Responsive & Animationen).
 
 ## 📱 Responsive Verhalten
 
 ### Desktop (>1200px)
-- Sidebar, KPIs, Charts, Tabellen Layout
+Layout-Beschreibung
 
 ### Tablet (768-1200px)
-- Anpassungen
+Anpassungen
 
 ### Mobile (<768px)
-ASCII-Mockup für Mobile:
-- Hamburger-Menü
-- Gestapelte Widgets
-- Bottom Navigation
+ASCII-Mockup: Hamburger, gestapelte Widgets, Bottom-Nav
 
 ---
 
-## ✨ Micro-Interactions & Animationen
+## ✨ Animationen
 
 ### Hover-Effekte
-- Karten, Buttons, Links
+Karten, Buttons, Links
 
 ### Transitions
-- Seiten-Wechsel
-- Modal öffnen
-- Sidebar toggle
+Seiten-Wechsel, Modals, Sidebar
 
 ### Daten-Updates
-- Zahlen-Änderung Animation
-- Chart-Update Animation
-- Neuer Eintrag Highlight
+Zahlen-Animation, Chart-Morphing
 
 ---
 
 ## 🌓 Dark Mode
-
-### Farb-Anpassungen
-- Background, Surface, Text, Border
-
-### Spezielle Anpassungen
-- Chart-Farben
-- Schatten
+Farb-Mapping Light→Dark
 
 ---
-
-✅ **DASHBOARD UI/UX DESIGN VOLLSTÄNDIG**
-
-WICHTIG:
-- Nutze deutsche Sprache
-- Alle States beschreiben (Hover, Active, Loading, Empty)
-- Mobile-First denken
-- Beende IMMER mit "✅ **DASHBOARD UI/UX DESIGN VOLLSTÄNDIG**"`
+✅ **DASHBOARD UI/UX DESIGN VOLLSTÄNDIG**`
 }
 
 function getUserStoriesSystemPrompt(): string {
@@ -1206,7 +1142,7 @@ ${extraData ? `- Zusätzliche Daten:\n${extraData}` : ''}`
 
   const formatName = formatNames[format]
   const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
-  const totalParts = format === 'standard' ? 6 : format === 'lovable' ? 4 : format === 'dashboard' ? 3 : singlePartFormats.includes(format) ? 1 : 2
+  const totalParts = format === 'standard' ? 6 : format === 'dashboard' ? 5 : format === 'lovable' ? 4 : singlePartFormats.includes(format) ? 1 : 2
   const partInfo = totalParts === 1
     ? `Erstelle die vollständige ${formatName}:`
     : `Erstelle TEIL ${part} von ${totalParts} des ${formatName}:`
@@ -1333,10 +1269,10 @@ Deno.serve(async (req) => {
     }
 
     // Default: Generate all parts sequentially
-    // Standard: 6 parts, Lovable: 4 parts, Dashboard: 3 parts, navigation/user-stories: 1 part, others: 2 parts
+    // Standard: 6 parts, Dashboard: 5 parts, Lovable: 4 parts, navigation/user-stories: 1 part, others: 2 parts
     const format = body.format || 'standard'
     const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
-    const totalParts = format === 'standard' ? 6 : format === 'lovable' ? 4 : format === 'dashboard' ? 3 : singlePartFormats.includes(format) ? 1 : 2
+    const totalParts = format === 'standard' ? 6 : format === 'dashboard' ? 5 : format === 'lovable' ? 4 : singlePartFormats.includes(format) ? 1 : 2
     let fullContent = ''
     const decoder = new TextDecoder()
 

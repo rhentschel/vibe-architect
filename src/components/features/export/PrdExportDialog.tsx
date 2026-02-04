@@ -158,7 +158,7 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
                 <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>
-                    {selectedFormat === 'navigation' ? 'Navigationsstruktur' : selectedFormat === 'user-stories' ? 'User Stories' : selectedFormat === 'dashboard' ? 'Dashboard Design' : selectedFormat === 'lovable' ? 'Lovable Knowledge-File' : 'PRD'} wird generiert... {currentPart && `(Teil ${currentPart}/${selectedFormat === 'standard' ? 6 : selectedFormat === 'lovable' ? 4 : selectedFormat === 'dashboard' ? 3 : ['navigation', 'user-stories'].includes(selectedFormat) ? 1 : 2})`}
+                    {selectedFormat === 'navigation' ? 'Navigationsstruktur' : selectedFormat === 'user-stories' ? 'User Stories' : selectedFormat === 'dashboard' ? 'Dashboard Design' : selectedFormat === 'lovable' ? 'Lovable Knowledge-File' : 'PRD'} wird generiert... {currentPart && `(Teil ${currentPart}/${selectedFormat === 'standard' ? 6 : selectedFormat === 'dashboard' ? 5 : selectedFormat === 'lovable' ? 4 : ['navigation', 'user-stories'].includes(selectedFormat) ? 1 : 2})`}
                   </span>
                   <Button
                     variant="ghost"

@@ -195,9 +195,9 @@ export function useExportPRD() {
         fullText = await processStream(response3, fullText, setStreamedContent, options)
         options?.onPartComplete?.(3)
 
-        // Dashboard format ends here (3 parts)
-        if (format === 'dashboard') {
-          // Skip to cleanup
+        // Continue for dashboard (5 parts), lovable (4 parts), standard (6 parts)
+        if (format !== 'dashboard' && format !== 'lovable' && format !== 'standard') {
+          // Other formats end here
         } else {
           // Lovable (4 parts) and Standard (6 parts) continue
 
@@ -265,13 +265,19 @@ export function useExportPRD() {
         fullText = await processStream(response5, fullText, setStreamedContent, options)
         options?.onPartComplete?.(5)
 
-        // Check if aborted
-        if (abortControllerRef.current?.signal.aborted) {
-          return null
-        }
+        // Dashboard format ends here (5 parts)
+        if (format === 'dashboard') {
+          // Skip to cleanup
+        } else {
+          // Standard format continues with part 6
 
-        // Part 6
-        setCurrentPart(6)
+          // Check if aborted
+          if (abortControllerRef.current?.signal.aborted) {
+            return null
+          }
+
+          // Part 6
+          setCurrentPart(6)
         fullText += '\n\n'
         setStreamedContent(fullText)
 
