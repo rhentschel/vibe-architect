@@ -21,11 +21,11 @@ interface RequestBody {
     gaps: Array<{ id: string; description: string; severity: string; resolved: boolean }>
   }
   messages: Array<{ role: string; content: string }>
-  part?: 1 | 2 | 3 | 4 | 5  // Which part to generate (standard uses 5 parts, others use 2)
+  part?: 1 | 2 | 3 | 4 | 5 | 6  // Which part to generate (standard uses 6 parts, others use 2)
   format?: ExportFormat  // Export format for different vibe-coding tools
 }
 
-function getSystemPrompt(part: 1 | 2 | 3 | 4 | 5, format: ExportFormat = 'standard'): string {
+function getSystemPrompt(part: 1 | 2 | 3 | 4 | 5 | 6, format: ExportFormat = 'standard'): string {
   if (format === 'lovable') {
     return getLovableSystemPrompt(part as 1 | 2)
   }
@@ -585,7 +585,7 @@ WICHTIG:
 - Beende IMMER mit "✅ **FIREBASE STUDIO PROMPT VOLLSTÄNDIG**"`
 }
 
-function getStandardSystemPrompt(part: 1 | 2 | 3 | 4 | 5): string {
+function getStandardSystemPrompt(part: 1 | 2 | 3 | 4 | 5 | 6): string {
   if (part === 1) {
     return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
 
@@ -704,30 +704,89 @@ WICHTIG:
 - Security Considerations VOLLSTÄNDIG mit allen relevanten Aspekten`
   }
 
-  return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
+  if (part === 5) {
+    return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
 
-Du schreibst TEIL 5 des PRD (Sections 9-11). Teile 1-4 wurden bereits erstellt.
+Du schreibst TEIL 5 des PRD (Sections 9-10). Teile 1-4 wurden bereits erstellt.
 
 STRUKTUR FÜR TEIL 5 (beginne direkt mit Section 9):
 
 ## 9. Open Questions / Gaps
-Liste aller ungelösten Gaps aus dem Graph mit Severity
+
+Liste ALLE ungelösten Gaps aus dem Graph:
+
+### 🔴 High Severity
+- [HIGH] Beschreibung des Problems
+  - **Impact**: Auswirkungen
+  - **Empfehlung**: Lösungsvorschlag
+
+### 🟡 Medium Severity
+- [MEDIUM] Beschreibung...
+
+### 🟢 Low Severity
+- [LOW] Beschreibung...
 
 ## 10. Implementation Phases
-Roadmap mit Phasen, Meilensteinen, Abhängigkeiten, Timeline
+
+Erstelle eine realistische Roadmap:
+
+### Phase 1: Foundation (Monat 1-3)
+- Meilenstein 1.1: Setup
+- Meilenstein 1.2: Core Database
+- **Deliverable**: ...
+
+### Phase 2: Core Features (Monat 4-6)
+...
+
+### Phase 3: Integration (Monat 7-9)
+...
+
+### Kritische Abhängigkeiten
+1. X → Y
+2. ...
+
+---
+**[FORTSETZUNG IN TEIL 6]**
+
+WICHTIG:
+- Gaps nach Severity gruppieren
+- Implementation Phases mit klaren Meilensteinen
+- Realistische Timeline angeben`
+  }
+
+  return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
+
+Du schreibst TEIL 6 des PRD (Section 11 - Appendix). Teile 1-5 wurden bereits erstellt.
+
+STRUKTUR FÜR TEIL 6 (beginne direkt mit Section 11):
 
 ## 11. Appendix
-Referenzen, Glossar, technische Details, Diagramm-Legende
+
+### 📚 Glossar
+Definiere KURZ die wichtigsten Fachbegriffe (max 15-20 Einträge):
+- **Begriff** - Kurze Definition (1 Zeile)
+
+### 🔗 Referenzen
+- Externe Dokumentationen
+- API-Referenzen
+- Relevante Standards (DSGVO, PSD2, etc.)
+
+### 🏗️ Diagramm-Legende
+Erkläre die verwendeten Symbole im Architektur-Diagramm:
+- 🔷 process - Services
+- 🗄️ database - Datenbanken
+- 🌐 external - Externe Services
 
 ---
 ✅ **PRD VOLLSTÄNDIG**
 
 WICHTIG:
-- Schreibe alle drei Sections vollständig aus
+- Glossar KOMPAKT halten (max 20 Begriffe)
+- Nur projektrelevante Begriffe
 - Beende IMMER mit "✅ **PRD VOLLSTÄNDIG**"`
 }
 
-function buildUserPrompt(body: RequestBody, part: 1 | 2 | 3 | 4 | 5, format: ExportFormat = 'standard'): string {
+function buildUserPrompt(body: RequestBody, part: 1 | 2 | 3 | 4 | 5 | 6, format: ExportFormat = 'standard'): string {
   const { projectName, projectDescription, graph, messages } = body
 
   const nodesText = graph.nodes
@@ -774,7 +833,7 @@ ${extraData ? `- Zusätzliche Daten:\n${extraData}` : ''}`
 
   const formatName = formatNames[format]
   const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
-  const totalParts = format === 'standard' ? 5 : singlePartFormats.includes(format) ? 1 : 2
+  const totalParts = format === 'standard' ? 6 : singlePartFormats.includes(format) ? 1 : 2
   const partInfo = totalParts === 1
     ? `Erstelle die vollständige ${formatName}:`
     : `Erstelle TEIL ${part} von ${totalParts} des ${formatName}:`
@@ -813,7 +872,7 @@ ${conversationSummary}
 ${partInfo}`
 }
 
-async function generatePart(body: RequestBody, part: 1 | 2 | 3 | 4 | 5): Promise<ReadableStream> {
+async function generatePart(body: RequestBody, part: 1 | 2 | 3 | 4 | 5 | 6): Promise<ReadableStream> {
   const format = body.format || 'standard'
   const userPrompt = buildUserPrompt(body, part, format)
   const systemPrompt = getSystemPrompt(part, format)
@@ -901,15 +960,15 @@ Deno.serve(async (req) => {
     }
 
     // Default: Generate all parts sequentially
-    // Standard format uses 5 parts, navigation/user-stories use 1 part, other formats use 2 parts
+    // Standard format uses 6 parts, navigation/user-stories use 1 part, other formats use 2 parts
     const format = body.format || 'standard'
     const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
-    const totalParts = format === 'standard' ? 5 : singlePartFormats.includes(format) ? 1 : 2
+    const totalParts = format === 'standard' ? 6 : singlePartFormats.includes(format) ? 1 : 2
     let fullContent = ''
     const decoder = new TextDecoder()
 
     for (let part = 1; part <= totalParts; part++) {
-      const stream = await generatePart(body, part as 1 | 2 | 3 | 4 | 5)
+      const stream = await generatePart(body, part as 1 | 2 | 3 | 4 | 5 | 6)
       const reader = stream.getReader()
 
       while (true) {
