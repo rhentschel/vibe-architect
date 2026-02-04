@@ -146,7 +146,7 @@ Dark Mode:   #1F2937 (Dunkel)    - Alternative Hintergrund
 │                                     │
 │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │  ← Sparkline, 24px Höhe
 └─────────────────────────────────────┘
-```
+\`\`\`
 - **Größe**: Min 200px breit, 140px hoch
 - **Hover**: Elevation Level 2, leichte Scale (1.02)
 - **Klickbar**: Cursor pointer, führt zu Detail-Ansicht
