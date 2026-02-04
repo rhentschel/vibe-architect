@@ -10,7 +10,7 @@ interface NodeData {
   [key: string]: unknown
 }
 
-type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio' | 'navigation'
+type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio' | 'navigation' | 'user-stories'
 
 interface RequestBody {
   projectName: string
@@ -38,7 +38,96 @@ function getSystemPrompt(part: 1 | 2 | 3 | 4 | 5, format: ExportFormat = 'standa
   if (format === 'navigation') {
     return getNavigationSystemPrompt()
   }
+  if (format === 'user-stories') {
+    return getUserStoriesSystemPrompt()
+  }
   return getStandardSystemPrompt(part)
+}
+
+function getUserStoriesSystemPrompt(): string {
+  return `Du bist ein erfahrener Product Owner, der User Stories für Kundenbesprechungen erstellt.
+
+WICHTIG: Dieses Dokument ist für KUNDEN gedacht, nicht für Entwickler!
+- Keine technischen Begriffe
+- Keine Implementierungsdetails
+- Einfache, verständliche Sprache
+- Fokus auf NUTZEN für den Anwender
+
+## AUSGABE-FORMAT
+
+# User Stories - [Projektname]
+
+## Projektübersicht
+*2-3 Sätze die erklären, was die Software macht und welches Problem sie löst. So einfach, dass es jeder versteht.*
+
+---
+
+## Benutzerrollen
+
+Erkläre kurz, wer die Software nutzen wird:
+
+| Rolle | Beschreibung |
+|-------|--------------|
+| 👤 Administrator | Verwaltet das System und Benutzer |
+| 👥 Mitarbeiter | Tägliche Nutzung der Hauptfunktionen |
+| 👁️ Gast | Eingeschränkter Zugriff |
+
+---
+
+## Funktionen nach Bereich
+
+### 🏠 [Bereichsname]
+
+**Was kann der Nutzer hier tun?**
+*Kurze Beschreibung des Bereichs in 1-2 Sätzen*
+
+| # | Als... | möchte ich... | um... | Priorität |
+|---|--------|---------------|-------|-----------|
+| 1 | Mitarbeiter | meine Übersicht sehen | schnell alle wichtigen Infos zu haben | ⭐ Wichtig |
+| 2 | Admin | Benutzer verwalten | Zugänge zu kontrollieren | ⭐ Wichtig |
+| 3 | Nutzer | Daten exportieren | sie offline nutzen zu können | ○ Optional |
+
+### 📊 [Nächster Bereich]
+...
+
+---
+
+## Zusammenfassung
+
+| Kategorie | Anzahl |
+|-----------|--------|
+| ⭐ Wichtige Funktionen | X |
+| ○ Optionale Funktionen | Y |
+| **Gesamt** | **Z** |
+
+---
+
+## Offene Fragen
+
+Falls es unklare Punkte gibt, liste sie hier:
+- [ ] Frage 1?
+- [ ] Frage 2?
+
+---
+
+✅ **USER STORIES VOLLSTÄNDIG**
+
+## REGELN
+
+1. **Einfache Sprache**: Keine Fachbegriffe, keine Abkürzungen
+2. **Nutzen betonen**: Immer erklären WARUM etwas wichtig ist
+3. **Priorisierung**:
+   - ⭐ Wichtig = Must-have für den Start
+   - ○ Optional = Nice-to-have, kann später kommen
+4. **Gruppierung**: Nach Funktionsbereichen, nicht nach technischen Modulen
+5. **Kurz halten**: Max 20-30 User Stories, sonst wird es unübersichtlich
+6. **Emojis sparsam**: Nur für Rollen und Bereiche zur besseren Übersicht
+
+WICHTIG:
+- Nutze deutsche Sprache
+- Vermeide: API, Backend, Frontend, Database, Server, Client, etc.
+- Stattdessen: "das System", "die Anwendung", "im Hintergrund"
+- Beende IMMER mit "✅ **USER STORIES VOLLSTÄNDIG**"`
 }
 
 function getNavigationSystemPrompt(): string {
@@ -680,10 +769,12 @@ ${extraData ? `- Zusätzliche Daten:\n${extraData}` : ''}`
     'claude-code': 'CLAUDE.md',
     'firebase-studio': 'Firebase Studio Prompt',
     'navigation': 'Navigationsstruktur',
+    'user-stories': 'User Stories',
   }
 
   const formatName = formatNames[format]
-  const totalParts = format === 'standard' ? 5 : format === 'navigation' ? 1 : 2
+  const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
+  const totalParts = format === 'standard' ? 5 : singlePartFormats.includes(format) ? 1 : 2
   const partInfo = totalParts === 1
     ? `Erstelle die vollständige ${formatName}:`
     : `Erstelle TEIL ${part} von ${totalParts} des ${formatName}:`
@@ -810,9 +901,10 @@ Deno.serve(async (req) => {
     }
 
     // Default: Generate all parts sequentially
-    // Standard format uses 5 parts, navigation uses 1 part, other formats use 2 parts
+    // Standard format uses 5 parts, navigation/user-stories use 1 part, other formats use 2 parts
     const format = body.format || 'standard'
-    const totalParts = format === 'standard' ? 5 : format === 'navigation' ? 1 : 2
+    const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
+    const totalParts = format === 'standard' ? 5 : singlePartFormats.includes(format) ? 1 : 2
     let fullContent = ''
     const decoder = new TextDecoder()
 

@@ -72,6 +72,7 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
         'claude-code': 'CLAUDE.md',
         'firebase-studio': 'firebase-studio-prompt.md',
         'navigation': 'navigation.md',
+        'user-stories': 'user-stories.md',
       }
       const blob = new Blob([contentToDownload], { type: 'text/markdown' })
       const url = URL.createObjectURL(blob)
@@ -156,7 +157,7 @@ export function PrdExportDialog({ open, onOpenChange }: PrdExportDialogProps) {
                 <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>
-                    {selectedFormat === 'navigation' ? 'Navigationsstruktur' : 'PRD'} wird generiert... {currentPart && `(Teil ${currentPart}/${selectedFormat === 'standard' ? 5 : selectedFormat === 'navigation' ? 1 : 2})`}
+                    {selectedFormat === 'navigation' ? 'Navigationsstruktur' : selectedFormat === 'user-stories' ? 'User Stories' : 'PRD'} wird generiert... {currentPart && `(Teil ${currentPart}/${selectedFormat === 'standard' ? 5 : (selectedFormat === 'navigation' || selectedFormat === 'user-stories') ? 1 : 2})`}
                   </span>
                   <Button
                     variant="ghost"
