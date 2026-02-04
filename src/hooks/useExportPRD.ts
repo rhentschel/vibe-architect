@@ -28,7 +28,7 @@ interface StreamCallbacks {
   onChunk?: (text: string) => void
   onComplete?: (fullText: string) => void
   onError?: (error: string) => void
-  onPartComplete?: (part: 1 | 2 | 3 | 4 | 5 | 6) => void
+  onPartComplete?: (part: number) => void
 }
 
 interface GeneratePRDOptions extends StreamCallbacks {
@@ -38,7 +38,7 @@ interface GeneratePRDOptions extends StreamCallbacks {
 export function useExportPRD() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [streamedContent, setStreamedContent] = useState('')
-  const [currentPart, setCurrentPart] = useState<1 | 2 | 3 | 4 | 5 | 6 | null>(null)
+  const [currentPart, setCurrentPart] = useState<number | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const { currentProject, messages, nodes, edges, gaps } = useProjectStore()
 
@@ -265,40 +265,68 @@ export function useExportPRD() {
         fullText = await processStream(response5, fullText, setStreamedContent, options)
         options?.onPartComplete?.(5)
 
-        // Dashboard format ends here (5 parts)
-        if (format === 'dashboard') {
-          // Skip to cleanup
-        } else {
-          // Standard format continues with part 6
-
+        // Standard format ends here (6 parts), Dashboard continues to 10
+        if (format === 'standard') {
           // Check if aborted
           if (abortControllerRef.current?.signal.aborted) {
             return null
           }
 
-          // Part 6
+          // Part 6 (Standard only)
           setCurrentPart(6)
-        fullText += '\n\n'
-        setStreamedContent(fullText)
+          fullText += '\n\n'
+          setStreamedContent(fullText)
 
-        const response6 = await fetch(functionUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ ...baseBody, part: 6 }),
-          signal: abortControllerRef.current.signal,
-        })
+          const response6 = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ ...baseBody, part: 6 }),
+            signal: abortControllerRef.current.signal,
+          })
 
-        if (!response6.ok) {
-          const errorData = await response6.json().catch(() => ({ error: 'Unknown error' }))
-          throw new Error(errorData.error || `HTTP ${response6.status}`)
+          if (!response6.ok) {
+            const errorData = await response6.json().catch(() => ({ error: 'Unknown error' }))
+            throw new Error(errorData.error || `HTTP ${response6.status}`)
+          }
+
+          fullText = await processStream(response6, fullText, setStreamedContent, options)
+          options?.onPartComplete?.(6)
         }
 
-        fullText = await processStream(response6, fullText, setStreamedContent, options)
-        options?.onPartComplete?.(6)
+        // Dashboard continues with parts 6-10
+        if (format === 'dashboard') {
+          for (let partNum = 6; partNum <= 10; partNum++) {
+            if (abortControllerRef.current?.signal.aborted) {
+              return null
+            }
+
+            setCurrentPart(partNum)
+            fullText += '\n\n'
+            setStreamedContent(fullText)
+
+            const response = await fetch(functionUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              },
+              body: JSON.stringify({ ...baseBody, part: partNum }),
+              signal: abortControllerRef.current.signal,
+            })
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+              throw new Error(errorData.error || `HTTP ${response.status}`)
+            }
+
+            fullText = await processStream(response, fullText, setStreamedContent, options)
+            options?.onPartComplete?.(partNum)
+          }
         }
         }
         }
