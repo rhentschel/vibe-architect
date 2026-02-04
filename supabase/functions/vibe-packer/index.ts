@@ -21,11 +21,11 @@ interface RequestBody {
     gaps: Array<{ id: string; description: string; severity: string; resolved: boolean }>
   }
   messages: Array<{ role: string; content: string }>
-  part?: 1 | 2 | 3 | 4  // Which part to generate (standard uses 4 parts, others use 2)
+  part?: 1 | 2 | 3 | 4 | 5  // Which part to generate (standard uses 5 parts, others use 2)
   format?: ExportFormat  // Export format for different vibe-coding tools
 }
 
-function getSystemPrompt(part: 1 | 2 | 3 | 4, format: ExportFormat = 'standard'): string {
+function getSystemPrompt(part: 1 | 2 | 3 | 4 | 5, format: ExportFormat = 'standard'): string {
   if (format === 'lovable') {
     return getLovableSystemPrompt(part as 1 | 2)
   }
@@ -400,7 +400,7 @@ WICHTIG:
 - Beende IMMER mit "✅ **FIREBASE STUDIO PROMPT VOLLSTÄNDIG**"`
 }
 
-function getStandardSystemPrompt(part: 1 | 2 | 3 | 4): string {
+function getStandardSystemPrompt(part: 1 | 2 | 3 | 4 | 5): string {
   if (part === 1) {
     return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
 
@@ -493,9 +493,10 @@ Beschreibe die wichtigsten Datenflüsse basierend auf den Edges im Graph.
 WICHTIG: Beschreibe JEDEN Node ausführlich mit allen verfügbaren Daten.`
   }
 
-  return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
+  if (part === 4) {
+    return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
 
-Du schreibst TEIL 4 des PRD (Sections 6-11). Teile 1-3 wurden bereits erstellt.
+Du schreibst TEIL 4 des PRD (Sections 6-8). Teile 1-3 wurden bereits erstellt.
 
 STRUKTUR FÜR TEIL 4 (beginne direkt mit Section 6):
 
@@ -510,6 +511,20 @@ SQL oder TypeScript-Interface-Beispiele für die wichtigsten Entitäten
 ## 8. Security Considerations
 Auth, Autorisierung, Datenschutz, DSGVO-Anforderungen (detailliert)
 
+---
+**[FORTSETZUNG IN TEIL 5]**
+
+WICHTIG:
+- Schreibe alle drei Sections vollständig aus
+- Security Considerations VOLLSTÄNDIG mit allen relevanten Aspekten`
+  }
+
+  return `Du bist ein erfahrener Technical Writer, der detaillierte Product Requirements Documents (PRD) für Software-Projekte erstellt.
+
+Du schreibst TEIL 5 des PRD (Sections 9-11). Teile 1-4 wurden bereits erstellt.
+
+STRUKTUR FÜR TEIL 5 (beginne direkt mit Section 9):
+
 ## 9. Open Questions / Gaps
 Liste aller ungelösten Gaps aus dem Graph mit Severity
 
@@ -523,11 +538,11 @@ Referenzen, Glossar, technische Details, Diagramm-Legende
 ✅ **PRD VOLLSTÄNDIG**
 
 WICHTIG:
-- Schreibe alle Sections vollständig aus
+- Schreibe alle drei Sections vollständig aus
 - Beende IMMER mit "✅ **PRD VOLLSTÄNDIG**"`
 }
 
-function buildUserPrompt(body: RequestBody, part: 1 | 2 | 3 | 4, format: ExportFormat = 'standard'): string {
+function buildUserPrompt(body: RequestBody, part: 1 | 2 | 3 | 4 | 5, format: ExportFormat = 'standard'): string {
   const { projectName, projectDescription, graph, messages } = body
 
   const nodesText = graph.nodes
@@ -571,7 +586,7 @@ ${extraData ? `- Zusätzliche Daten:\n${extraData}` : ''}`
   }
 
   const formatName = formatNames[format]
-  const totalParts = format === 'standard' ? 4 : 2
+  const totalParts = format === 'standard' ? 5 : 2
   const partInfo = `Erstelle TEIL ${part} von ${totalParts} des ${formatName}:`
 
   return `# Projekt: ${projectName}
@@ -608,7 +623,7 @@ ${conversationSummary}
 ${partInfo}`
 }
 
-async function generatePart(body: RequestBody, part: 1 | 2 | 3 | 4): Promise<ReadableStream> {
+async function generatePart(body: RequestBody, part: 1 | 2 | 3 | 4 | 5): Promise<ReadableStream> {
   const format = body.format || 'standard'
   const userPrompt = buildUserPrompt(body, part, format)
   const systemPrompt = getSystemPrompt(part, format)
@@ -695,69 +710,56 @@ Deno.serve(async (req) => {
       return new Response(readable, { headers: streamHeaders })
     }
 
-    // Default: Generate both parts sequentially
+    // Default: Generate all parts sequentially
+    // Standard format uses 5 parts, other formats use 2 parts
+    const format = body.format || 'standard'
+    const totalParts = format === 'standard' ? 5 : 2
     let fullContent = ''
-
-    // Generate Part 1
-    const stream1 = await generatePart(body, 1)
-    const reader1 = stream1.getReader()
     const decoder = new TextDecoder()
 
-    while (true) {
-      const { done, value } = await reader1.read()
-      if (done) break
+    for (let part = 1; part <= totalParts; part++) {
+      const stream = await generatePart(body, part as 1 | 2 | 3 | 4 | 5)
+      const reader = stream.getReader()
 
-      const text = decoder.decode(value, { stream: true })
-      const lines = text.split('\n')
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
 
-      for (const line of lines) {
-        if (line.startsWith('data: ') && line.slice(6) !== '[DONE]') {
-          try {
-            const parsed = JSON.parse(line.slice(6))
-            if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-              fullContent += parsed.delta.text
-            }
-          } catch {}
+        const text = decoder.decode(value, { stream: true })
+        const lines = text.split('\n')
+
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line.slice(6) !== '[DONE]') {
+            try {
+              const parsed = JSON.parse(line.slice(6))
+              if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+                fullContent += parsed.delta.text
+              }
+            } catch {}
+          }
         }
+      }
+
+      // Add separator between parts (except after last part)
+      if (part < totalParts) {
+        fullContent += '\n\n'
       }
     }
 
-    // Add separator between parts
-    fullContent += '\n\n'
-
-    // Generate Part 2
-    const stream2 = await generatePart(body, 2)
-    const reader2 = stream2.getReader()
-
-    while (true) {
-      const { done, value } = await reader2.read()
-      if (done) break
-
-      const text = decoder.decode(value, { stream: true })
-      const lines = text.split('\n')
-
-      for (const line of lines) {
-        if (line.startsWith('data: ') && line.slice(6) !== '[DONE]') {
-          try {
-            const parsed = JSON.parse(line.slice(6))
-            if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-              fullContent += parsed.delta.text
-            }
-          } catch {}
-        }
-      }
-    }
-
-    // Clean up the content - remove part markers
+    // Clean up the content - remove part markers and normalize spacing
     fullContent = fullContent
+      // Remove continuation markers
       .replace(/\*\*\[FORTSETZUNG IN TEIL \d\]\*\*/g, '')
-      .replace(/\*\*\[TEIL 1 ENDE - FORTSETZUNG IN TEIL 2\]\*\*/g, '')
-      .replace(/---\s*\n\s*\n\s*##\s*4\./g, '---\n\n## 4.')
-      .replace(/---\s*\n\s*\n\s*##\s*5\./g, '---\n\n## 5.')
-      .replace(/---\s*\n\s*\n\s*##\s*6\./g, '---\n\n## 6.')
-      .replace(/---\s*\n\s*\n\s*##\s*Backend/g, '---\n\n## Backend')
-      .replace(/---\s*\n\s*\n\s*##\s*Commands/g, '---\n\n## Commands')
-      .replace(/---\s*\n\s*\n\s*##\s*Technical Requirements/g, '---\n\n## Technical Requirements')
+      .replace(/\*\*\[TEIL \d ENDE - FORTSETZUNG IN TEIL \d\]\*\*/g, '')
+      .replace(/---\s*\*\*\[FORTSETZUNG IN TEIL \d\]\*\*\s*/g, '')
+      // Normalize section spacing for standard PRD
+      .replace(/---\s*\n\s*\n+\s*##\s*(\d+)\./g, '---\n\n## $1.')
+      // Normalize section spacing for other formats
+      .replace(/---\s*\n\s*\n+\s*##\s*Backend/g, '---\n\n## Backend')
+      .replace(/---\s*\n\s*\n+\s*##\s*Commands/g, '---\n\n## Commands')
+      .replace(/---\s*\n\s*\n+\s*##\s*Technical Requirements/g, '---\n\n## Technical Requirements')
+      // Remove excessive newlines
+      .replace(/\n{4,}/g, '\n\n\n')
 
     return new Response(
       JSON.stringify({ prd: fullContent }),
