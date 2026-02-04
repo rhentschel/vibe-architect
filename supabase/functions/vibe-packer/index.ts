@@ -10,7 +10,7 @@ interface NodeData {
   [key: string]: unknown
 }
 
-type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio'
+type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio' | 'navigation'
 
 interface RequestBody {
   projectName: string
@@ -35,7 +35,103 @@ function getSystemPrompt(part: 1 | 2 | 3 | 4 | 5, format: ExportFormat = 'standa
   if (format === 'firebase-studio') {
     return getFirebaseStudioSystemPrompt(part as 1 | 2)
   }
+  if (format === 'navigation') {
+    return getNavigationSystemPrompt()
+  }
   return getStandardSystemPrompt(part)
+}
+
+function getNavigationSystemPrompt(): string {
+  return `Du bist ein erfahrener UX-Architekt und Technical Writer, der Navigationsstrukturen für Software-Projekte erstellt.
+
+Deine Aufgabe: Erstelle eine übersichtliche Navigationsstruktur basierend auf den Architektur-Komponenten (Nodes) und deren Verbindungen (Edges).
+
+## AUSGABE-FORMAT
+
+### 1. Hierarchischer Navigationsbaum (ASCII/Markdown)
+
+Zeige die komplette Struktur als eingerückten Baum:
+
+\`\`\`
+📱 App Name
+├── 🏠 Dashboard
+│   ├── Übersicht
+│   ├── Statistiken
+│   └── Quick Actions
+├── 👤 Benutzerverwaltung
+│   ├── Profil
+│   │   ├── Persönliche Daten
+│   │   └── Einstellungen
+│   ├── Berechtigungen
+│   └── Aktivitätslog
+├── 📊 [Hauptbereich 1]
+│   ├── [Unterseite]
+│   └── [Unterseite]
+└── ⚙️ Einstellungen
+    ├── Allgemein
+    ├── Benachrichtigungen
+    └── System
+\`\`\`
+
+### 2. Mermaid Flowchart
+
+Erstelle ein Mermaid-Diagramm das die Navigation und Verknüpfungen zeigt:
+
+\`\`\`mermaid
+flowchart TD
+    subgraph Main["🏠 Hauptnavigation"]
+        A[Dashboard]
+        B[Bereich 1]
+        C[Bereich 2]
+    end
+
+    subgraph Sub1["📊 Bereich 1"]
+        B1[Unterseite 1]
+        B2[Unterseite 2]
+    end
+
+    A --> B
+    A --> C
+    B --> B1
+    B --> B2
+    B1 -.-> C
+\`\`\`
+
+### 3. Navigations-Tabelle
+
+| Screen | Parent | Typ | Beschreibung | Verknüpft mit |
+|--------|--------|-----|--------------|---------------|
+| Dashboard | - | Hauptseite | Übersicht | Alle Bereiche |
+| Profil | Benutzer | Unterseite | Benutzerdaten | Einstellungen |
+
+### 4. User Flows (wichtigste Pfade)
+
+Beschreibe die 3-5 wichtigsten Navigationspfade:
+
+**Flow 1: [Name]**
+\`Home → Bereich → Unterseite → Aktion\`
+
+**Flow 2: [Name]**
+\`Home → ... → ...\`
+
+## REGELN
+
+1. **Hierarchie ableiten**: Analysiere die Edges um Parent-Child-Beziehungen zu erkennen
+2. **Typen erkennen**:
+   - "frontend", "page", "screen", "view" → Navigierbare Screens
+   - "component", "ui" → UI-Elemente (als Unterpunkte)
+   - "backend", "api", "database" → Nicht in Navigation (aber als Verknüpfung erwähnen)
+3. **Icons verwenden**: Passende Emojis für Bereiche (🏠 Home, 👤 User, ⚙️ Settings, 📊 Data, etc.)
+4. **Verknüpfungen zeigen**: Gestrichelte Linien (-.->)für Querverweise zwischen Bereichen
+5. **KI-lesbar**: Struktur so aufbauen, dass Vibe-Coding Tools sie verstehen
+
+## WICHTIG
+
+- Nutze deutsche Sprache
+- Fokussiere auf NAVIGIERBARE Elemente (Screens, Pages, Views)
+- Backend-Komponenten als "verbunden mit" erwähnen, nicht als Navigation
+- Halte das Mermaid-Diagramm übersichtlich (max 15-20 Nodes)
+- Beende mit "✅ **NAVIGATIONSSTRUKTUR VOLLSTÄNDIG**"`
 }
 
 function getLovableSystemPrompt(part: 1 | 2): string {
@@ -583,11 +679,14 @@ ${extraData ? `- Zusätzliche Daten:\n${extraData}` : ''}`
     'lovable': 'Lovable Knowledge-File',
     'claude-code': 'CLAUDE.md',
     'firebase-studio': 'Firebase Studio Prompt',
+    'navigation': 'Navigationsstruktur',
   }
 
   const formatName = formatNames[format]
-  const totalParts = format === 'standard' ? 5 : 2
-  const partInfo = `Erstelle TEIL ${part} von ${totalParts} des ${formatName}:`
+  const totalParts = format === 'standard' ? 5 : format === 'navigation' ? 1 : 2
+  const partInfo = totalParts === 1
+    ? `Erstelle die vollständige ${formatName}:`
+    : `Erstelle TEIL ${part} von ${totalParts} des ${formatName}:`
 
   return `# Projekt: ${projectName}
 
@@ -711,9 +810,9 @@ Deno.serve(async (req) => {
     }
 
     // Default: Generate all parts sequentially
-    // Standard format uses 5 parts, other formats use 2 parts
+    // Standard format uses 5 parts, navigation uses 1 part, other formats use 2 parts
     const format = body.format || 'standard'
-    const totalParts = format === 'standard' ? 5 : 2
+    const totalParts = format === 'standard' ? 5 : format === 'navigation' ? 1 : 2
     let fullContent = ''
     const decoder = new TextDecoder()
 

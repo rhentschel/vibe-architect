@@ -2,13 +2,14 @@ import { useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 
-export type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio'
+export type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio' | 'navigation'
 
 export const exportFormatLabels: Record<ExportFormat, string> = {
   'standard': 'Standard PRD',
   'lovable': 'Lovable Knowledge-File',
   'claude-code': 'Claude Code (CLAUDE.md)',
   'firebase-studio': 'Firebase Studio / Antigravity',
+  'navigation': 'Navigationsstruktur',
 }
 
 export const exportFormatDescriptions: Record<ExportFormat, string> = {
@@ -16,6 +17,7 @@ export const exportFormatDescriptions: Record<ExportFormat, string> = {
   'lovable': 'Optimiert für lovable.dev - Knowledge-File mit Design-Philosophie und User Journeys',
   'claude-code': 'Kompaktes CLAUDE.md Memory-File für Claude Code CLI (<300 Zeilen)',
   'firebase-studio': 'Elevator-Pitch Format für Firebase Studio App Prototyping',
+  'navigation': 'Hierarchische Sitemap mit Mermaid-Diagramm - zeigt Screens, Unterpunkte und Verknüpfungen',
 }
 
 interface StreamCallbacks {
@@ -120,6 +122,14 @@ export function useExportPRD() {
 
       fullText = await processStream(response1, fullText, setStreamedContent, options)
       options?.onPartComplete?.(1)
+
+      // Navigation format only needs 1 part
+      if (format === 'navigation') {
+        // Clean up and return
+        setStreamedContent(fullText)
+        options?.onComplete?.(fullText)
+        return fullText
+      }
 
       // Check if aborted
       if (abortControllerRef.current?.signal.aborted) {
