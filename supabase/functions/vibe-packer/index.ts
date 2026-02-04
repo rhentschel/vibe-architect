@@ -42,15 +42,16 @@ function getSystemPrompt(part: 1 | 2 | 3 | 4 | 5 | 6, format: ExportFormat = 'st
     return getUserStoriesSystemPrompt()
   }
   if (format === 'dashboard') {
-    return getDashboardSystemPrompt()
+    return getDashboardSystemPrompt(part as 1 | 2 | 3)
   }
   return getStandardSystemPrompt(part)
 }
 
-function getDashboardSystemPrompt(): string {
-  return `Du bist ein erfahrener UI/UX Designer, spezialisiert auf Dashboard-Design und Datenvisualisierung.
+function getDashboardSystemPrompt(part: 1 | 2 | 3): string {
+  if (part === 1) {
+    return `Du bist ein erfahrener UI/UX Designer, spezialisiert auf Dashboard-Design und Datenvisualisierung.
 
-Deine Aufgabe: Erstelle ein VISUELLES Dashboard-Design-Konzept basierend auf der Architektur. Fokussiere dich auf das AUSSEHEN und die BENUTZERERFAHRUNG, nicht auf technische Details.
+Du schreibst TEIL 1 des Dashboard UI/UX Designs (Design System & Layout).
 
 ## AUSGABE-FORMAT
 
@@ -59,327 +60,211 @@ Deine Aufgabe: Erstelle ein VISUELLES Dashboard-Design-Konzept basierend auf der
 ## 🎨 Design System
 
 ### Farbpalette
-\`\`\`
-Primary:     #3B82F6 (Blau)      - Haupt-Aktionen, aktive Elemente
-Secondary:   #10B981 (Grün)      - Erfolg, positive Trends
-Accent:      #F59E0B (Orange)    - Warnungen, Highlights
-Danger:      #EF4444 (Rot)       - Fehler, negative Trends
-Neutral:     #6B7280 (Grau)      - Text, Borders
-
-Background:  #F9FAFB (Hell)      - Seiten-Hintergrund
-Surface:     #FFFFFF (Weiß)      - Karten, Widgets
-Dark Mode:   #1F2937 (Dunkel)    - Alternative Hintergrund
-\`\`\`
+Definiere eine passende Farbpalette mit Hex-Werten:
+- **Primary**: Haupt-Aktionen, aktive Elemente
+- **Secondary**: Erfolg, positive Trends
+- **Accent**: Warnungen, Highlights
+- **Danger**: Fehler, negative Trends
+- **Neutral**: Text, Borders
+- **Background**: Seiten-Hintergrund
+- **Surface**: Karten, Widgets
+- **Dark Mode**: Alternative Hintergrund
 
 ### Typografie
-- **Headlines**: Inter Bold, 24-32px
-- **Subheadings**: Inter Semibold, 18-20px
-- **Body**: Inter Regular, 14-16px
-- **Small/Labels**: Inter Medium, 12px
-- **KPI-Zahlen**: Inter Bold, 36-48px (Monospace für Zahlen)
+- **Headlines**: Font, Gewicht, Größe
+- **Subheadings**: Font, Gewicht, Größe
+- **Body**: Font, Größe
+- **Small/Labels**: Font, Größe
+- **KPI-Zahlen**: Font, Größe (groß und prominent)
 
 ### Spacing & Grid
-- **Base Unit**: 8px
-- **Padding Widgets**: 24px
-- **Gap zwischen Widgets**: 16px
-- **Border Radius**: 12px (Karten), 8px (Buttons), 4px (Inputs)
-- **Grid**: 12 Spalten, 24px Gutter
+- **Base Unit**: z.B. 8px
+- **Padding Widgets**: z.B. 24px
+- **Gap zwischen Widgets**: z.B. 16px
+- **Border Radius**: Für Karten, Buttons, Inputs
+- **Grid**: Spalten, Gutter
 
 ### Schatten & Elevation
-- **Level 1** (Karten): \`0 1px 3px rgba(0,0,0,0.1)\`
-- **Level 2** (Hover): \`0 4px 6px rgba(0,0,0,0.1)\`
-- **Level 3** (Modals): \`0 10px 25px rgba(0,0,0,0.15)\`
+- **Level 1** (Karten): CSS Shadow
+- **Level 2** (Hover): CSS Shadow
+- **Level 3** (Modals): CSS Shadow
 
 ---
 
 ## 📐 Layout-Struktur
 
-### Header (64px Höhe)
-\`\`\`
-┌──────────────────────────────────────────────────────────────────┐
-│  [Logo]     Dashboard-Titel          🔍 Suche    🔔 ●  [Avatar ▼]│
-└──────────────────────────────────────────────────────────────────┘
-\`\`\`
-- Logo links, 32px
-- Titel zentriert oder links
-- Rechts: Suche (optional), Notifications mit Badge, User-Avatar mit Dropdown
+### Header
+Beschreibe den Header mit ASCII-Mockup:
+- Höhe, Position der Elemente
+- Logo, Titel, Navigation, User-Menu
 
-### Sidebar (240px Breite, collapsible auf 64px)
-\`\`\`
-┌────────────────────┐
-│  ☰  Menü-Toggle    │
-├────────────────────┤
-│  🏠 Dashboard      │ ← aktiv: Background #EBF5FF, linker Border 3px Primary
-│  📊 Analytics      │
-│  👥 Benutzer       │
-│  ⚙️ Einstellungen  │
-├────────────────────┤
-│  ─────────────────  │
-│  📁 Projekte       │
-│     └─ Projekt A   │
-│     └─ Projekt B   │
-└────────────────────┘
-\`\`\`
-- Hover: Background #F3F4F6
-- Icons: 20px, Lucide Icons
-- Collapsed: Nur Icons mit Tooltip
+### Sidebar
+Beschreibe die Sidebar mit ASCII-Mockup:
+- Breite (normal/collapsed)
+- Menü-Punkte basierend auf der Architektur
+- Hover-States, aktive States
 
 ### Main Content Area
-- Max-Width: 1440px, zentriert
-- Padding: 24px
-- Background: #F9FAFB
+- Max-Width, Padding
+- Hintergrundfarbe
 
 ---
 
+**[FORTSETZUNG IN TEIL 2]**
+
+WICHTIG:
+- Nutze deutsche Sprache
+- ASCII-Mockups für Layout-Visualisierung
+- Alle Farben mit Hex-Werten`
+  }
+
+  if (part === 2) {
+    return `Du bist ein erfahrener UI/UX Designer, spezialisiert auf Dashboard-Design.
+
+Du schreibst TEIL 2 des Dashboard UI/UX Designs (Widgets & Charts).
+
 ## 🎯 KPI-Karten Design
 
-### Einzelne KPI-Karte
-\`\`\`
-┌─────────────────────────────────────┐
-│  📈                                 │  ← Icon, 24px, Primary Color
-│                                     │
-│  Aktive Nutzer                      │  ← Label, 14px, Grau #6B7280
-│                                     │
-│  1.234                              │  ← Wert, 36px Bold, Schwarz
-│                                     │
-│  ↑ 12,5%  vs. letzter Monat         │  ← Trend, 12px, Grün wenn positiv
-│                                     │
-│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │  ← Sparkline, 24px Höhe
-└─────────────────────────────────────┘
-\`\`\`
-- **Größe**: Min 200px breit, 140px hoch
-- **Hover**: Elevation Level 2, leichte Scale (1.02)
-- **Klickbar**: Cursor pointer, führt zu Detail-Ansicht
+### KPI-Karten Grid
+Erstelle ein ASCII-Mockup für die KPI-Karten:
+- Zeige 4 KPI-Karten nebeneinander
+- Beschreibe jede Karte: Icon, Label, Wert, Trend, Sparkline
+
+### KPI-Karte Detail
+- **Größe**: Breite x Höhe
+- **Hover-Effekt**: Was passiert bei Hover?
+- **Klick-Verhalten**: Wohin führt der Klick?
 
 ### KPI-Varianten
-1. **Standard**: Zahl + Trend + Sparkline
-2. **Progress**: Zahl + Progress-Bar (z.B. 75% von Ziel)
-3. **Comparison**: Zwei Zahlen nebeneinander (Aktuell vs. Vorher)
-4. **Mini**: Nur Zahl + Icon (für mobile)
+1. **Standard**: Beschreibung
+2. **Progress**: Mit Progress-Bar
+3. **Comparison**: Vergleichswerte
+4. **Mini**: Kompakte Version
 
 ---
 
 ## 📊 Chart-Designs
 
 ### Line Chart (Zeitverlauf)
-\`\`\`
-┌─────────────────────────────────────────────────────────┐
-│  Umsatzentwicklung                    [7T] [30T] [1J]   │  ← Zeitraum-Toggle
-│  ─────────────────────────────────────────────────────  │
-│                                                         │
-│  €50k ┤                            ╭──●                 │
-│       │                       ╭────╯                    │
-│  €40k ┤                  ╭────╯                         │
-│       │             ╭────╯                              │
-│  €30k ┤        ╭────╯                                   │
-│       │   ╭────╯                                        │
-│  €20k ┤───╯                                             │
-│       └────┬────┬────┬────┬────┬────┬────┬             │
-│           Mo   Di   Mi   Do   Fr   Sa   So              │
-│                                                         │
-│  ● Umsatz    ○ Vorjahr (gestrichelt)                    │  ← Legende
-└─────────────────────────────────────────────────────────┘
-\`\`\`
-- **Linie**: 2px, Primary Color, abgerundete Ecken
-- **Punkte**: 6px Durchmesser, bei Hover 10px
-- **Fläche**: Gradient von Primary 20% zu Transparent
-- **Tooltip**: Schwebendes Card mit Datum + Wert
-- **Grid**: Gestrichelte horizontale Linien, #E5E7EB
+ASCII-Mockup eines Line Charts:
+- Achsen, Datenpunkte, Legende
+- Zeitraum-Toggle
+- Styling: Liniendicke, Farben, Fläche
 
 ### Bar Chart (Vergleich)
-\`\`\`
-┌─────────────────────────────────────────────────────────┐
-│  Verkäufe nach Kategorie                                │
-│  ─────────────────────────────────────────────────────  │
-│                                                         │
-│  Kategorie A  ████████████████████████████████░░  85%   │
-│  Kategorie B  ██████████████████████░░░░░░░░░░░░  62%   │
-│  Kategorie C  ████████████████░░░░░░░░░░░░░░░░░░  45%   │
-│  Kategorie D  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░  28%   │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-\`\`\`
-- **Balken**: Border-radius 4px rechts
-- **Abstand**: 12px zwischen Balken
-- **Hover**: Balken wird heller, Tooltip erscheint
+ASCII-Mockup eines Bar Charts:
+- Horizontale oder vertikale Balken
+- Prozentangaben
+- Hover-Verhalten
 
-### Donut Chart (Anteile)
-\`\`\`
-┌─────────────────────────────────────┐
-│  Verteilung                         │
-│                                     │
-│         ╭───────────╮               │
-│       ╱   ██████     ╲              │
-│      │   ████████████ │             │
-│      │   ████ 45% ███ │             │  ← Zentrale Zahl
-│      │   ████████████ │             │
-│       ╲   ██████     ╱              │
-│         ╰───────────╯               │
-│                                     │
-│  ● Typ A (45%)  ● Typ B (35%)       │
-│  ● Typ C (20%)                      │
-└─────────────────────────────────────┘
-\`\`\`
-- **Dicke**: 40px
-- **Lücke**: 2px zwischen Segmenten
-- **Hover**: Segment "explodiert" leicht raus
+### Donut/Pie Chart (Anteile)
+ASCII-Mockup:
+- Zentrale Zahl
+- Legende
+- Hover-Effekt
 
 ---
 
 ## 📋 Tabellen-Design
 
 ### Datentabelle
-\`\`\`
-┌─────────────────────────────────────────────────────────────────────┐
-│  Letzte Aktivitäten                              🔍 Filter  ⬇ Export│
-├─────────────────────────────────────────────────────────────────────┤
-│  ☐  Name ▼           Status        Datum           Aktionen        │
-├─────────────────────────────────────────────────────────────────────┤
-│  ☐  Max Mustermann   🟢 Aktiv      15.01.2024     [👁] [✏️] [🗑️]  │
-│  ☐  Anna Schmidt     🟡 Ausstehend 14.01.2024     [👁] [✏️] [🗑️]  │
-│  ☐  Peter Weber      🔴 Inaktiv    10.01.2024     [👁] [✏️] [🗑️]  │
-├─────────────────────────────────────────────────────────────────────┤
-│  ◀ Zurück          Seite 1 von 5           10 ▼        Weiter ▶    │
-└─────────────────────────────────────────────────────────────────────┘
-\`\`\`
-- **Header**: Background #F9FAFB, Font-weight 600
-- **Zeilen**: Hover Background #F3F4F6
-- **Alternierend**: Optional leichter Grau-Wechsel
-- **Status-Badges**: Pill-Form, 6px padding, entsprechende Farbe
-- **Aktions-Buttons**: Ghost-Style, nur Icons, Tooltip bei Hover
+ASCII-Mockup einer Tabelle:
+- Header mit Sortierung
+- Zeilen mit Status-Badges
+- Aktions-Buttons
+- Pagination
+
+Styling:
+- Header-Background
+- Hover-States
+- Status-Badge-Farben
 
 ---
+
+**[FORTSETZUNG IN TEIL 3]**
+
+WICHTIG:
+- ASCII-Mockups für alle Widgets
+- Beschreibe Hover und Klick-Verhalten
+- Leite Inhalte aus der Architektur ab`
+  }
+
+  return `Du bist ein erfahrener UI/UX Designer, spezialisiert auf Dashboard-Design.
+
+Du schreibst TEIL 3 des Dashboard UI/UX Designs (Feedback, Responsive, Animationen).
 
 ## 🔔 Benachrichtigungen & Feedback
 
 ### Toast-Notifications
-\`\`\`
-┌────────────────────────────────────┐
-│ ✓  Erfolgreich gespeichert    ✕   │  ← Grüner linker Border
-└────────────────────────────────────┘
+ASCII-Mockups für verschiedene Toast-Typen:
+- Erfolg (grün)
+- Warnung (orange)
+- Fehler (rot)
+- Info (blau)
 
-┌────────────────────────────────────┐
-│ ⚠  Achtung: Ungespeicherte...  ✕  │  ← Oranger linker Border
-└────────────────────────────────────┘
-
-┌────────────────────────────────────┐
-│ ✕  Fehler beim Laden           ✕   │  ← Roter linker Border
-└────────────────────────────────────┘
-\`\`\`
-- Position: Top-right, 24px vom Rand
-- Animation: Slide-in von rechts
-- Auto-dismiss: Nach 5 Sekunden
+Position, Animation, Auto-dismiss
 
 ### Empty States
-\`\`\`
-┌─────────────────────────────────────────┐
-│                                         │
-│              📭                         │
-│                                         │
-│       Keine Daten vorhanden            │
-│                                         │
-│   Erstelle deinen ersten Eintrag       │
-│                                         │
-│         [ + Neu erstellen ]            │
-│                                         │
-└─────────────────────────────────────────┘
-\`\`\`
+ASCII-Mockup für leere Zustände:
+- Icon, Text, Call-to-Action
 
 ### Loading States
-- **Skeleton**: Animierte graue Blöcke (Pulse-Animation)
-- **Spinner**: 24px, Primary Color, bei Buttons inline
-- **Progress**: Für längere Operationen, mit Prozentanzeige
+- **Skeleton**: Beschreibung
+- **Spinner**: Größe, Farbe
+- **Progress**: Für längere Operationen
 
 ---
 
 ## 📱 Responsive Verhalten
 
 ### Desktop (>1200px)
-- Sidebar: Voll ausgeklappt, 240px
-- KPIs: 4 Spalten
-- Charts: 2 Spalten (66% + 33%)
-- Tabelle: Alle Spalten sichtbar
+- Sidebar, KPIs, Charts, Tabellen Layout
 
 ### Tablet (768-1200px)
-- Sidebar: Collapsed auf Icons, 64px
-- KPIs: 2 Spalten
-- Charts: Volle Breite, untereinander
-- Tabelle: Scroll horizontal
+- Anpassungen
 
 ### Mobile (<768px)
-\`\`\`
-┌─────────────────────┐
-│ ☰  Dashboard    👤  │  ← Hamburger-Menü
-├─────────────────────┤
-│ ┌─────────────────┐ │
-│ │    KPI 1        │ │
-│ └─────────────────┘ │
-│ ┌─────────────────┐ │
-│ │    KPI 2        │ │
-│ └─────────────────┘ │
-│ ┌─────────────────┐ │
-│ │                 │ │
-│ │    Chart        │ │
-│ │                 │ │
-│ └─────────────────┘ │
-│                     │
-│ [Tab1] [Tab2] [Tab3]│  ← Bottom Navigation
-└─────────────────────┘
-\`\`\`
+ASCII-Mockup für Mobile:
+- Hamburger-Menü
+- Gestapelte Widgets
+- Bottom Navigation
 
 ---
 
 ## ✨ Micro-Interactions & Animationen
 
 ### Hover-Effekte
-- **Karten**: Scale 1.02, Shadow Level 2, 200ms ease
-- **Buttons**: Background-Shift, 150ms
-- **Links**: Underline slide-in
+- Karten, Buttons, Links
 
 ### Transitions
-- **Seiten-Wechsel**: Fade (200ms)
-- **Modal öffnen**: Scale von 0.95 + Fade (250ms)
-- **Sidebar toggle**: Width-Transition (300ms ease)
+- Seiten-Wechsel
+- Modal öffnen
+- Sidebar toggle
 
 ### Daten-Updates
-- **Zahlen-Änderung**: Count-Up Animation
-- **Chart-Update**: Smooth line morph
-- **Neuer Eintrag**: Highlight-Flash (gelber Background, 1s fade)
+- Zahlen-Änderung Animation
+- Chart-Update Animation
+- Neuer Eintrag Highlight
 
 ---
 
 ## 🌓 Dark Mode
 
-### Anpassungen
-\`\`\`
-Background:  #111827    (statt #F9FAFB)
-Surface:     #1F2937    (statt #FFFFFF)
-Text:        #F9FAFB    (statt #111827)
-Border:      #374151    (statt #E5E7EB)
-\`\`\`
+### Farb-Anpassungen
+- Background, Surface, Text, Border
 
-### Chart-Farben Dark Mode
-- Hellere Töne für bessere Sichtbarkeit
-- Grid-Linien: #374151
-- Tooltip-Background: #374151
+### Spezielle Anpassungen
+- Chart-Farben
+- Schatten
 
 ---
 
 ✅ **DASHBOARD UI/UX DESIGN VOLLSTÄNDIG**
 
-## REGELN
-
-1. **Visuell denken**: Beschreibe WIE es aussieht, nicht wie es funktioniert
-2. **ASCII-Mockups**: Nutze ASCII-Art um Layouts zu visualisieren
-3. **Farben konkret**: Immer Hex-Werte oder Tailwind-Klassen angeben
-4. **Spacing konsistent**: Immer 8px-Grid einhalten
-5. **States beschreiben**: Hover, Active, Disabled, Loading, Empty
-6. **Mobile first**: Responsive Verhalten für alle Breakpoints
-
 WICHTIG:
 - Nutze deutsche Sprache
-- Fokussiere auf VISUELLES Design, nicht Technik
-- Beziehe dich auf die Architektur-Nodes für Dashboard-Inhalte
+- Alle States beschreiben (Hover, Active, Loading, Empty)
+- Mobile-First denken
 - Beende IMMER mit "✅ **DASHBOARD UI/UX DESIGN VOLLSTÄNDIG**"`
 }
 
@@ -1320,8 +1205,8 @@ ${extraData ? `- Zusätzliche Daten:\n${extraData}` : ''}`
   }
 
   const formatName = formatNames[format]
-  const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories', 'dashboard']
-  const totalParts = format === 'standard' ? 6 : format === 'lovable' ? 4 : singlePartFormats.includes(format) ? 1 : 2
+  const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
+  const totalParts = format === 'standard' ? 6 : format === 'lovable' ? 4 : format === 'dashboard' ? 3 : singlePartFormats.includes(format) ? 1 : 2
   const partInfo = totalParts === 1
     ? `Erstelle die vollständige ${formatName}:`
     : `Erstelle TEIL ${part} von ${totalParts} des ${formatName}:`
@@ -1448,10 +1333,10 @@ Deno.serve(async (req) => {
     }
 
     // Default: Generate all parts sequentially
-    // Standard: 6 parts, Lovable: 4 parts, navigation/user-stories/dashboard: 1 part, others: 2 parts
+    // Standard: 6 parts, Lovable: 4 parts, Dashboard: 3 parts, navigation/user-stories: 1 part, others: 2 parts
     const format = body.format || 'standard'
-    const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories', 'dashboard']
-    const totalParts = format === 'standard' ? 6 : format === 'lovable' ? 4 : singlePartFormats.includes(format) ? 1 : 2
+    const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
+    const totalParts = format === 'standard' ? 6 : format === 'lovable' ? 4 : format === 'dashboard' ? 3 : singlePartFormats.includes(format) ? 1 : 2
     let fullContent = ''
     const decoder = new TextDecoder()
 

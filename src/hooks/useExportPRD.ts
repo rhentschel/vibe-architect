@@ -127,8 +127,8 @@ export function useExportPRD() {
       fullText = await processStream(response1, fullText, setStreamedContent, options)
       options?.onPartComplete?.(1)
 
-      // Navigation, user-stories, and dashboard formats only need 1 part
-      if (format === 'navigation' || format === 'user-stories' || format === 'dashboard') {
+      // Navigation and user-stories formats only need 1 part
+      if (format === 'navigation' || format === 'user-stories') {
         // Clean up and return
         setStreamedContent(fullText)
         options?.onComplete?.(fullText)
@@ -169,8 +169,8 @@ export function useExportPRD() {
         return null
       }
 
-      // For standard (6 parts) and lovable (4 parts), generate additional parts
-      if (format === 'standard' || format === 'lovable') {
+      // For standard (6 parts), lovable (4 parts), and dashboard (3 parts), generate additional parts
+      if (format === 'standard' || format === 'lovable' || format === 'dashboard') {
         // Part 3
         setCurrentPart(3)
         fullText += '\n\n'
@@ -195,13 +195,19 @@ export function useExportPRD() {
         fullText = await processStream(response3, fullText, setStreamedContent, options)
         options?.onPartComplete?.(3)
 
-        // Check if aborted
-        if (abortControllerRef.current?.signal.aborted) {
-          return null
-        }
+        // Dashboard format ends here (3 parts)
+        if (format === 'dashboard') {
+          // Skip to cleanup
+        } else {
+          // Lovable (4 parts) and Standard (6 parts) continue
 
-        // Part 4
-        setCurrentPart(4)
+          // Check if aborted
+          if (abortControllerRef.current?.signal.aborted) {
+            return null
+          }
+
+          // Part 4
+          setCurrentPart(4)
         fullText += '\n\n'
         setStreamedContent(fullText)
 
@@ -287,6 +293,7 @@ export function useExportPRD() {
 
         fullText = await processStream(response6, fullText, setStreamedContent, options)
         options?.onPartComplete?.(6)
+        }
         }
       }
 
