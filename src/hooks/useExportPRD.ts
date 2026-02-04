@@ -167,8 +167,8 @@ export function useExportPRD() {
         return null
       }
 
-      // For standard format, generate Parts 3 and 4
-      if (format === 'standard') {
+      // For standard (6 parts) and lovable (4 parts), generate additional parts
+      if (format === 'standard' || format === 'lovable') {
         // Part 3
         setCurrentPart(3)
         fullText += '\n\n'
@@ -222,13 +222,19 @@ export function useExportPRD() {
         fullText = await processStream(response4, fullText, setStreamedContent, options)
         options?.onPartComplete?.(4)
 
-        // Check if aborted
-        if (abortControllerRef.current?.signal.aborted) {
-          return null
-        }
+        // Lovable format ends here (4 parts)
+        if (format === 'lovable') {
+          // Skip to cleanup
+        } else {
+          // Standard format continues with parts 5 and 6
 
-        // Part 5
-        setCurrentPart(5)
+          // Check if aborted
+          if (abortControllerRef.current?.signal.aborted) {
+            return null
+          }
+
+          // Part 5
+          setCurrentPart(5)
         fullText += '\n\n'
         setStreamedContent(fullText)
 
@@ -279,6 +285,7 @@ export function useExportPRD() {
 
         fullText = await processStream(response6, fullText, setStreamedContent, options)
         options?.onPartComplete?.(6)
+        }
       }
 
       // Clean up markers

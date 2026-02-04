@@ -223,7 +223,7 @@ Beschreibe die 3-5 wichtigsten Navigationspfade:
 - Beende mit "✅ **NAVIGATIONSSTRUKTUR VOLLSTÄNDIG**"`
 }
 
-function getLovableSystemPrompt(part: 1 | 2): string {
+function getLovableSystemPrompt(part: 1 | 2 | 3 | 4): string {
   if (part === 1) {
     return `Du bist ein erfahrener Technical Writer, der Knowledge-Files für Lovable (lovable.dev) erstellt.
 
@@ -236,105 +236,253 @@ STRUKTUR FÜR TEIL 1:
 # [Projektname] - Lovable Knowledge File
 
 ## Product Vision
-Klare, inspirierende Beschreibung des Produkts in 2-3 Sätzen.
-Was macht es einzigartig? Welches Problem löst es?
+Klare, inspirierende Beschreibung des Produkts in 2-3 Absätzen.
+- Was ist das Produkt?
+- Welches Problem löst es?
+- Was macht es einzigartig?
+- Wer ist die Zielgruppe?
 
 ## Design Philosophy
-Beschreibe den gewünschten visuellen Stil mit Design-Buzzwords:
-- Beispiele: "minimal", "premium", "developer-focused", "playful", "corporate", "modern SaaS"
-- Farbpalette-Hinweise
-- Typografie-Stil
+Beschreibe den gewünschten visuellen Stil DETAILLIERT:
 
-## User Journeys
-Für JEDEN Benutzertyp:
-### [Rolle]
-1. Schritt-für-Schritt User Flow
-2. Was sieht der Benutzer?
-3. Welche Aktionen kann er durchführen?
+### Visual Style
+- Hauptstil: z.B. "minimal", "premium", "corporate", "modern SaaS", "playful"
+- Inspiration: Ähnliche Apps/Websites als Referenz
 
-## Core Features
-Liste ALLER Features mit:
-- Feature-Name
-- Beschreibung
-- Priorität (Must-have / Nice-to-have)
-- Verknüpfte User Journey
+### Farbpalette
+- Primary Color: Hex-Wert und Verwendung
+- Secondary Color: Hex-Wert und Verwendung
+- Accent Color: Für CTAs und Highlights
+- Neutral Colors: Grautöne für Text/Backgrounds
+- Semantic Colors: Success, Warning, Error
 
-## Tech Stack Requirements
-- Frontend: React + TypeScript + Tailwind (Lovable Standard)
-- State Management: Empfehlung
-- UI Components: shadcn/ui (Lovable Standard)
-- Icons: lucide-react
+### Typografie
+- Headings: Font-Familie, Gewichte
+- Body Text: Font-Familie, Größen
+- UI Elements: Buttons, Labels
+
+### Spacing & Layout
+- Generelles Spacing-System (4px, 8px, 16px, etc.)
+- Border-Radius Stil (sharp, rounded, pill)
+- Shadow-Stil (none, subtle, prominent)
 
 ---
-**[TEIL 1 ENDE - FORTSETZUNG IN TEIL 2]**
+**[FORTSETZUNG IN TEIL 2]**
 
 WICHTIG:
-- Nutze deutsche Sprache
-- Sei SEHR detailliert bei User Journeys
-- Design-Buzzwords helfen Lovable den richtigen Stil zu generieren`
+- Design-Buzzwords helfen Lovable den richtigen Stil zu generieren
+- Je detaillierter die Design-Vorgaben, desto besser das Ergebnis`
+  }
+
+  if (part === 2) {
+    return `Du bist ein erfahrener Technical Writer, der Knowledge-Files für Lovable erstellt.
+
+Du schreibst TEIL 2 des Knowledge-Files (User Journeys & Features).
+
+STRUKTUR FÜR TEIL 2:
+
+## User Roles
+Definiere ALLE Benutzerrollen:
+
+### [Rolle 1]
+- **Beschreibung**: Wer ist dieser Benutzer?
+- **Ziele**: Was will er erreichen?
+- **Berechtigungen**: Was darf er sehen/tun?
+
+### [Rolle 2]
+...
+
+## User Journeys
+Für JEDEN Benutzertyp DETAILLIERTE Journeys:
+
+### Journey: [Rolle] - [Hauptaufgabe]
+**Kontext**: Warum macht der Benutzer das?
+
+1. **Einstieg**: Wo startet der Benutzer?
+   - Was sieht er?
+   - Welche UI-Elemente sind sichtbar?
+
+2. **Schritt 2**: [Aktion]
+   - Interaktion (Klick, Eingabe, etc.)
+   - Feedback vom System
+   - Nächster Screen
+
+3. **Schritt 3**: ...
+
+4. **Abschluss**: Erfolgs-State
+   - Bestätigung
+   - Nächste mögliche Aktionen
+
+### Journey: [Rolle] - [Weitere Aufgabe]
+...
+
+## Core Features
+Liste ALLER Features gruppiert nach Bereich:
+
+### [Bereich 1]
+| Feature | Beschreibung | Priorität | User Journey |
+|---------|--------------|-----------|--------------|
+| Feature A | Was es tut | Must-have | Journey X |
+| Feature B | Was es tut | Nice-to-have | Journey Y |
+
+### [Bereich 2]
+...
+
+---
+**[FORTSETZUNG IN TEIL 3]**
+
+WICHTIG:
+- Sei SEHR detailliert bei User Journeys - Lovable braucht diese für die UI-Generierung
+- Jeder Schritt sollte beschreiben WAS der Benutzer SIEHT`
+  }
+
+  if (part === 3) {
+    return `Du bist ein erfahrener Technical Writer, der Knowledge-Files für Lovable erstellt.
+
+Du schreibst TEIL 3 des Knowledge-Files (UI Components & Tech Stack).
+
+STRUKTUR FÜR TEIL 3:
+
+## Tech Stack
+- **Frontend**: React + TypeScript + Tailwind (Lovable Standard)
+- **UI Library**: shadcn/ui (Lovable Standard)
+- **Icons**: lucide-react
+- **State Management**: [Empfehlung basierend auf Komplexität]
+- **Forms**: react-hook-form + zod
+- **Backend**: Supabase (Database, Auth, Storage, Edge Functions)
+
+## Page Structure
+Beschreibe JEDE Seite der Anwendung:
+
+### /[route]
+- **Zweck**: Was macht diese Seite?
+- **Layout**: Header, Sidebar, Main Content, Footer
+- **Komponenten**:
+  - KomponentenName: Beschreibung
+  - KomponentenName: Beschreibung
+- **Daten**: Welche Daten werden geladen?
+- **Aktionen**: Was kann der Benutzer tun?
+
+### /[weitere-route]
+...
+
+## Component Guidelines
+
+### Layout Components
+\`\`\`
+AppLayout
+├── Header
+│   ├── Logo
+│   ├── Navigation
+│   └── UserMenu
+├── Sidebar (optional)
+│   └── SideNav
+├── MainContent
+│   └── [Page Content]
+└── Footer (optional)
+\`\`\`
+
+### Reusable Components
+Für JEDE wiederverwendbare Komponente:
+
+#### [ComponentName]
+- **Zweck**: Was macht die Komponente?
+- **Props**:
+  \`\`\`typescript
+  interface ComponentNameProps {
+    prop1: string
+    prop2?: number
+    onAction?: () => void
+  }
+  \`\`\`
+- **Varianten**: default, primary, secondary, etc.
+- **Verwendung**: Wo wird sie eingesetzt?
+
+---
+**[FORTSETZUNG IN TEIL 4]**
+
+WICHTIG:
+- Lovable nutzt shadcn/ui - nutze deren Komponenten-Namen
+- Beschreibe die Hierarchie der Komponenten`
   }
 
   return `Du bist ein erfahrener Technical Writer, der Knowledge-Files für Lovable erstellt.
 
-Du schreibst TEIL 2 des Knowledge-Files (beginne direkt mit Backend).
+Du schreibst TEIL 4 des Knowledge-Files (Backend & Data Models).
 
-STRUKTUR FÜR TEIL 2:
+STRUKTUR FÜR TEIL 4:
 
 ## Backend Architecture
-### Supabase Setup
-- Tabellen-Struktur (Lovable nutzt Supabase nativ)
-- Row Level Security (RLS) Policies
-- Edge Functions falls benötigt
 
-### API Design
-- Endpoints und deren Zweck
-- Request/Response Beispiele
+### Supabase Database Schema
+Für JEDE Tabelle:
 
-## Data Models
-Für JEDE Entität:
+#### [table_name]
+\`\`\`sql
+CREATE TABLE [table_name] (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  field1 TEXT NOT NULL,
+  field2 INTEGER,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+\`\`\`
+
+**Beziehungen:**
+- Gehört zu: [andere_tabelle]
+- Hat viele: [andere_tabelle]
+
+**RLS Policies:**
+\`\`\`sql
+-- Benutzer können nur eigene Daten lesen
+CREATE POLICY "Users read own data" ON [table_name]
+  FOR SELECT USING (auth.uid() = user_id);
+\`\`\`
+
+### TypeScript Interfaces
 \`\`\`typescript
-interface EntityName {
+interface TableName {
   id: string
-  field1: type
-  field2: type
-  // Beziehungen
-  relatedEntity?: RelatedType
+  field1: string
+  field2: number | null
+  createdAt: Date
+  updatedAt: Date
 }
 \`\`\`
 
 ## Authentication & Authorization
-- Auth-Flow (Supabase Auth)
-- Rollen und Berechtigungen
-- Protected Routes
+- **Auth Provider**: Supabase Auth
+- **Login Methods**: Email/Password, Magic Link, OAuth (Google, GitHub)
+- **Rollen-System**: Wie werden Rollen zugewiesen?
+- **Protected Routes**: Welche Routen erfordern Auth?
 
-## Component Guidelines
-### Layout
-- Header/Navigation Struktur
-- Sidebar falls vorhanden
-- Footer
+## Edge Functions (falls benötigt)
+Für komplexe Backend-Logik:
 
-### Reusable Components
-Liste wiederverwendbarer UI-Komponenten:
-- Komponenten-Name
-- Props
-- Verwendungszweck
+### [function-name]
+- **Trigger**: Wann wird sie aufgerufen?
+- **Input**: Was erwartet sie?
+- **Output**: Was gibt sie zurück?
+- **Logik**: Was macht sie?
 
-## Integration Points
-- Externe APIs
-- Webhooks
-- Third-party Services
+## External Integrations
+- **API 1**: Zweck, Endpoints
+- **API 2**: ...
 
-## Deployment Notes
-- Environment Variables
-- Supabase Project Setup
+## Environment Variables
+\`\`\`env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+# Weitere...
+\`\`\`
 
 ---
 ✅ **LOVABLE KNOWLEDGE FILE VOLLSTÄNDIG**
 
 WICHTIG:
-- TypeScript Interfaces für alle Datenmodelle
-- Supabase-spezifische Syntax verwenden
-- Beende IMMER mit "✅ **LOVABLE KNOWLEDGE FILE VOLLSTÄNDIG**"`
+- SQL-Syntax für Supabase verwenden
+- RLS Policies sind KRITISCH für Sicherheit
+- TypeScript Interfaces für Type-Safety`
 }
 
 function getClaudeCodeSystemPrompt(part: 1 | 2): string {
@@ -833,7 +981,7 @@ ${extraData ? `- Zusätzliche Daten:\n${extraData}` : ''}`
 
   const formatName = formatNames[format]
   const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
-  const totalParts = format === 'standard' ? 6 : singlePartFormats.includes(format) ? 1 : 2
+  const totalParts = format === 'standard' ? 6 : format === 'lovable' ? 4 : singlePartFormats.includes(format) ? 1 : 2
   const partInfo = totalParts === 1
     ? `Erstelle die vollständige ${formatName}:`
     : `Erstelle TEIL ${part} von ${totalParts} des ${formatName}:`
@@ -960,10 +1108,10 @@ Deno.serve(async (req) => {
     }
 
     // Default: Generate all parts sequentially
-    // Standard format uses 6 parts, navigation/user-stories use 1 part, other formats use 2 parts
+    // Standard: 6 parts, Lovable: 4 parts, navigation/user-stories: 1 part, others: 2 parts
     const format = body.format || 'standard'
     const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
-    const totalParts = format === 'standard' ? 6 : singlePartFormats.includes(format) ? 1 : 2
+    const totalParts = format === 'standard' ? 6 : format === 'lovable' ? 4 : singlePartFormats.includes(format) ? 1 : 2
     let fullContent = ''
     const decoder = new TextDecoder()
 
