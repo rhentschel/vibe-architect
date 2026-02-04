@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 
-export type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio' | 'navigation' | 'user-stories'
+export type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio' | 'navigation' | 'user-stories' | 'dashboard'
 
 export const exportFormatLabels: Record<ExportFormat, string> = {
   'standard': 'Standard PRD',
@@ -11,6 +11,7 @@ export const exportFormatLabels: Record<ExportFormat, string> = {
   'firebase-studio': 'Firebase Studio / Antigravity',
   'navigation': 'Navigationsstruktur',
   'user-stories': 'User Stories (Kunden-Version)',
+  'dashboard': 'Dashboard Design',
 }
 
 export const exportFormatDescriptions: Record<ExportFormat, string> = {
@@ -20,6 +21,7 @@ export const exportFormatDescriptions: Record<ExportFormat, string> = {
   'firebase-studio': 'Elevator-Pitch Format für Firebase Studio App Prototyping',
   'navigation': 'Hierarchische Sitemap mit Mermaid-Diagramm - zeigt Screens, Unterpunkte und Verknüpfungen',
   'user-stories': 'Einfache User Stories für Kundenbesprechungen - ohne technische Details',
+  'dashboard': 'KPIs, Widgets und Visualisierungen aus der Architektur abgeleitet',
 }
 
 interface StreamCallbacks {
@@ -125,8 +127,8 @@ export function useExportPRD() {
       fullText = await processStream(response1, fullText, setStreamedContent, options)
       options?.onPartComplete?.(1)
 
-      // Navigation and user-stories formats only need 1 part
-      if (format === 'navigation' || format === 'user-stories') {
+      // Navigation, user-stories, and dashboard formats only need 1 part
+      if (format === 'navigation' || format === 'user-stories' || format === 'dashboard') {
         // Clean up and return
         setStreamedContent(fullText)
         options?.onComplete?.(fullText)

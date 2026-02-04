@@ -10,7 +10,7 @@ interface NodeData {
   [key: string]: unknown
 }
 
-type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio' | 'navigation' | 'user-stories'
+type ExportFormat = 'standard' | 'lovable' | 'claude-code' | 'firebase-studio' | 'navigation' | 'user-stories' | 'dashboard'
 
 interface RequestBody {
   projectName: string
@@ -41,7 +41,232 @@ function getSystemPrompt(part: 1 | 2 | 3 | 4 | 5 | 6, format: ExportFormat = 'st
   if (format === 'user-stories') {
     return getUserStoriesSystemPrompt()
   }
+  if (format === 'dashboard') {
+    return getDashboardSystemPrompt()
+  }
   return getStandardSystemPrompt(part)
+}
+
+function getDashboardSystemPrompt(): string {
+  return `Du bist ein erfahrener Dashboard-Designer und Data Visualization Expert, der aus Software-Architekturen sinnvolle Dashboards ableitet.
+
+Deine Aufgabe: Analysiere die Architektur-Komponenten (Nodes) und deren Verbindungen (Edges) und erstelle ein detailliertes Dashboard-Design.
+
+## AUSGABE-FORMAT
+
+# Dashboard Design - [Projektname]
+
+## Executive Summary
+Kurze Beschreibung des Dashboard-Zwecks und der Zielgruppe.
+
+---
+
+## 1. Dashboard-Übersicht
+
+### Zielgruppen & Dashboards
+Definiere für JEDE Benutzerrolle ein eigenes Dashboard:
+
+| Dashboard | Zielgruppe | Hauptzweck |
+|-----------|------------|------------|
+| Operations Dashboard | Admin/Management | Systemübersicht, KPIs |
+| User Dashboard | Endbenutzer | Persönliche Daten |
+| Analytics Dashboard | Business Analyst | Trends, Reports |
+
+---
+
+## 2. KPIs & Metriken
+
+### Primäre KPIs
+Leite aus der Architektur die wichtigsten Kennzahlen ab:
+
+| KPI | Beschreibung | Datenquelle | Berechnung | Zielwert |
+|-----|--------------|-------------|------------|----------|
+| Aktive Nutzer | Anzahl eingeloggter User | User-DB | COUNT(last_login > 24h) | > 80% |
+| Systemlast | CPU/Memory Auslastung | Monitoring | AVG(load) | < 70% |
+| Fehlerrate | Fehler pro Stunde | Logs | COUNT(errors)/h | < 0.1% |
+
+### Sekundäre KPIs
+Weitere wichtige Metriken nach Bereich gruppiert.
+
+---
+
+## 3. Widget-Katalog
+
+### Übersichts-Widgets
+
+#### Widget: [Name]
+- **Typ**: Karte / Chart / Tabelle / Liste
+- **Größe**: Klein (1x1) / Mittel (2x1) / Groß (2x2)
+- **Daten**: Welche Daten werden angezeigt?
+- **Aktualisierung**: Echtzeit / 5min / Täglich
+- **Interaktion**: Klickbar → Detail-View
+
+\`\`\`
+┌─────────────────────┐
+│  📊 Widget-Name     │
+│  ═══════════════    │
+│  [Visualisierung]   │
+│                     │
+│  Wert: 1.234        │
+│  Trend: ↑ +5%       │
+└─────────────────────┘
+\`\`\`
+
+### Chart-Widgets
+
+#### Widget: Zeitreihen-Chart
+- **Typ**: Line Chart
+- **X-Achse**: Zeit (Stunde/Tag/Woche/Monat)
+- **Y-Achse**: Metrik
+- **Serien**: Vergleichswerte
+- **Interaktion**: Zoom, Hover-Details, Zeitraum-Filter
+
+### Tabellen-Widgets
+
+#### Widget: Datentabelle
+- **Spalten**: [Spalte 1, Spalte 2, ...]
+- **Sortierung**: Nach welcher Spalte?
+- **Filter**: Welche Filter verfügbar?
+- **Pagination**: Einträge pro Seite
+- **Aktionen**: Buttons in jeder Zeile
+
+---
+
+## 4. Dashboard-Layouts
+
+### Layout: [Dashboard-Name]
+
+\`\`\`
+┌─────────────────────────────────────────────────────────┐
+│  🏠 Dashboard Header                            [User ▼]│
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │
+│  │ KPI 1   │ │ KPI 2   │ │ KPI 3   │ │ KPI 4   │       │
+│  │  1.234  │ │   89%   │ │  €12k   │ │   42    │       │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘       │
+│                                                         │
+│  ┌───────────────────────────┐ ┌───────────────────┐   │
+│  │                           │ │                   │   │
+│  │   Haupt-Chart             │ │   Sekundär-Chart  │   │
+│  │   (Line/Bar)              │ │   (Pie/Donut)     │   │
+│  │                           │ │                   │   │
+│  └───────────────────────────┘ └───────────────────┘   │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  Datentabelle                                    │   │
+│  │  ─────────────────────────────────────────────   │   │
+│  │  Spalte 1  │ Spalte 2  │ Spalte 3  │ Aktionen   │   │
+│  │  ...       │ ...       │ ...       │ [📝][🗑️]  │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## 5. Datenquellen & Refresh
+
+### Datenquellen-Mapping
+
+| Widget | Datenquelle | API Endpoint | Refresh-Rate |
+|--------|-------------|--------------|--------------|
+| KPI 1 | User-DB | /api/stats/users | 5 min |
+| Chart 1 | Analytics | /api/analytics/timeseries | 1 min |
+| Tabelle | Backend | /api/data/list | On-Demand |
+
+### Caching-Strategie
+- **Hot Data**: Echtzeit, kein Cache
+- **Warm Data**: 5-15 Minuten Cache
+- **Cold Data**: Stündlich/Täglich
+
+---
+
+## 6. Filter & Interaktionen
+
+### Globale Filter
+- **Zeitraum**: Heute / 7 Tage / 30 Tage / Custom
+- **Benutzer/Gruppe**: Dropdown-Auswahl
+- **Status**: Aktiv / Inaktiv / Alle
+
+### Widget-spezifische Filter
+Beschreibe für komplexe Widgets die Filtermöglichkeiten.
+
+### Drill-Down-Pfade
+- KPI klicken → Detail-Dashboard
+- Tabellen-Zeile klicken → Einzelansicht
+- Chart-Punkt klicken → Zeitpunkt-Details
+
+---
+
+## 7. Alerts & Benachrichtigungen
+
+### Dashboard-Alerts
+
+| Alert | Bedingung | Schweregrad | Aktion |
+|-------|-----------|-------------|--------|
+| Hohe Fehlerrate | errors > 10/min | 🔴 Kritisch | Push + E-Mail |
+| Systemlast | CPU > 80% | 🟡 Warnung | Dashboard-Badge |
+| Neuer Eintrag | new_items > 0 | 🔵 Info | Counter-Update |
+
+---
+
+## 8. Responsive Design
+
+### Breakpoints
+- **Desktop** (>1200px): Volles Grid-Layout
+- **Tablet** (768-1200px): 2-Spalten-Layout
+- **Mobile** (<768px): 1-Spalte, gestapelt
+
+### Widget-Priorität für Mobile
+1. Kritische KPIs (immer sichtbar)
+2. Haupt-Chart (scrollbar)
+3. Sekundäre Widgets (collapsible)
+
+---
+
+## 9. Technische Implementierung
+
+### Empfohlene Libraries
+- **Charts**: Recharts, Chart.js, ApexCharts
+- **Tabellen**: TanStack Table, AG Grid
+- **Layout**: CSS Grid, Tailwind
+- **State**: React Query für Server-State
+
+### Komponenten-Struktur
+\`\`\`
+Dashboard/
+├── DashboardLayout.tsx
+├── widgets/
+│   ├── KPICard.tsx
+│   ├── TimeSeriesChart.tsx
+│   ├── DataTable.tsx
+│   └── PieChart.tsx
+├── filters/
+│   ├── DateRangePicker.tsx
+│   └── GlobalFilters.tsx
+└── hooks/
+    ├── useDashboardData.ts
+    └── useWidgetRefresh.ts
+\`\`\`
+
+---
+
+✅ **DASHBOARD DESIGN VOLLSTÄNDIG**
+
+## REGELN
+
+1. **Aus Architektur ableiten**: Jedes Widget muss einen Bezug zu einem Node oder Edge haben
+2. **KPIs zuerst**: Definiere messbare Kennzahlen bevor du Widgets designst
+3. **Benutzerorientiert**: Unterschiedliche Dashboards für unterschiedliche Rollen
+4. **ASCII-Layouts**: Visualisiere das Layout mit ASCII-Art
+5. **Datenquellen angeben**: Für jedes Widget die Herkunft der Daten definieren
+6. **Mobile bedenken**: Responsive Design ist Pflicht
+
+WICHTIG:
+- Nutze deutsche Sprache
+- Beziehe dich auf die konkreten Nodes aus der Architektur
+- Beende IMMER mit "✅ **DASHBOARD DESIGN VOLLSTÄNDIG**"`
 }
 
 function getUserStoriesSystemPrompt(): string {
@@ -977,10 +1202,11 @@ ${extraData ? `- Zusätzliche Daten:\n${extraData}` : ''}`
     'firebase-studio': 'Firebase Studio Prompt',
     'navigation': 'Navigationsstruktur',
     'user-stories': 'User Stories',
+    'dashboard': 'Dashboard Design',
   }
 
   const formatName = formatNames[format]
-  const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
+  const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories', 'dashboard']
   const totalParts = format === 'standard' ? 6 : format === 'lovable' ? 4 : singlePartFormats.includes(format) ? 1 : 2
   const partInfo = totalParts === 1
     ? `Erstelle die vollständige ${formatName}:`
@@ -1108,9 +1334,9 @@ Deno.serve(async (req) => {
     }
 
     // Default: Generate all parts sequentially
-    // Standard: 6 parts, Lovable: 4 parts, navigation/user-stories: 1 part, others: 2 parts
+    // Standard: 6 parts, Lovable: 4 parts, navigation/user-stories/dashboard: 1 part, others: 2 parts
     const format = body.format || 'standard'
-    const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories']
+    const singlePartFormats: ExportFormat[] = ['navigation', 'user-stories', 'dashboard']
     const totalParts = format === 'standard' ? 6 : format === 'lovable' ? 4 : singlePartFormats.includes(format) ? 1 : 2
     let fullContent = ''
     const decoder = new TextDecoder()
