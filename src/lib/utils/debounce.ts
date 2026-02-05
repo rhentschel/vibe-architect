@@ -6,7 +6,7 @@
  * @param wait - The number of milliseconds to delay
  * @returns A debounced function with cancel() and flush() methods
  */
-export function debounce<T extends (...args: Parameters<T>) => void>(
+export function debounce<T extends (...args: unknown[]) => void>(
   fn: T,
   wait: number
 ): {

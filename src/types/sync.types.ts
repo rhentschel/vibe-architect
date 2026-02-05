@@ -27,36 +27,3 @@ export interface ConflictData {
  * Options for resolving a version conflict
  */
 export type ConflictResolution = 'keep_local' | 'load_remote' | 'merge'
-
-/**
- * Payload for Supabase realtime updates
- */
-export interface RealtimeSnapshotPayload {
-  new: {
-    id: string
-    project_id: string
-    version: number
-    graph_data: {
-      nodes: Array<{
-        id: string
-        type: string
-        label: string
-        description?: string
-        position?: { x: number; y: number }
-        data?: Record<string, unknown>
-      }>
-      edges: Array<{
-        id: string
-        source: string
-        target: string
-        label?: string
-        type?: string
-      }>
-      gaps: LogicGap[]
-    }
-    created_at: string
-  }
-  old: {
-    id: string
-  } | null
-}

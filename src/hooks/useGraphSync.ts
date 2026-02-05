@@ -2,10 +2,10 @@ import { useEffect, useRef, useCallback, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 import { debounce } from '@/lib/utils/debounce'
-import type { SyncStatus, ConflictData, ConflictResolution, RealtimeSnapshotPayload } from '@/types/sync.types'
+import type { SyncStatus, ConflictData, ConflictResolution } from '@/types/sync.types'
 import type { ReactFlowNode, ReactFlowEdge, LogicGap } from '@/types/graph.types'
 import type { GraphData } from '@/types/database.types'
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { RealtimeChannel, RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 
 const DEBOUNCE_DELAY = 1500
 
@@ -17,6 +17,14 @@ interface UseGraphSyncReturn {
   syncStatus: SyncStatus
   conflictData: ConflictData | null
   resolveConflict: (resolution: ConflictResolution) => Promise<void>
+}
+
+interface SnapshotRow {
+  id: string
+  project_id: string
+  version: number
+  graph_data: GraphData
+  created_at: string
 }
 
 export function useGraphSync({ enabled = true }: UseGraphSyncOptions = {}): UseGraphSyncReturn {
@@ -83,11 +91,12 @@ export function useGraphSync({ enabled = true }: UseGraphSyncOptions = {}): UseG
         .limit(1)
         .single()
 
-      const remoteVersion = currentSnapshot?.version ?? 0
+      const snapshotData = currentSnapshot as { version: number; graph_data: GraphData } | null
+      const remoteVersion = snapshotData?.version ?? 0
 
       // Conflict detection
       if (remoteVersion > localVersion) {
-        const remoteGraphData = currentSnapshot?.graph_data as GraphData
+        const remoteGraphData = snapshotData?.graph_data as GraphData
 
         // Parse remote graph data into ReactFlow format
         const remoteNodes: ReactFlowNode[] = remoteGraphData.nodes.map((n) => ({
@@ -142,7 +151,8 @@ export function useGraphSync({ enabled = true }: UseGraphSyncOptions = {}): UseG
         throw error
       }
 
-      setLocalVersion(newSnapshot.version)
+      const newSnapshotData = newSnapshot as { version: number }
+      setLocalVersion(newSnapshotData.version)
       lastSavedAtRef.current = Date.now()
       setSyncStatus('saved')
 
@@ -153,7 +163,7 @@ export function useGraphSync({ enabled = true }: UseGraphSyncOptions = {}): UseG
           setSyncStatus('idle')
         }
       }, 2000)
-    } catch (error) {
+    } catch {
       setSyncStatus('error')
     } finally {
       isSavingRef.current = false
@@ -191,7 +201,7 @@ export function useGraphSync({ enabled = true }: UseGraphSyncOptions = {}): UseG
 
     const channel = supabase
       .channel(`snapshots:${currentProject.id}`)
-      .on(
+      .on<SnapshotRow>(
         'postgres_changes',
         {
           event: 'INSERT',
@@ -199,7 +209,7 @@ export function useGraphSync({ enabled = true }: UseGraphSyncOptions = {}): UseG
           table: 'architecture_snapshots',
           filter: `project_id=eq.${currentProject.id}`,
         },
-        (payload: RealtimeSnapshotPayload) => {
+        (payload: RealtimePostgresInsertPayload<SnapshotRow>) => {
           const newVersion = payload.new.version
           const currentLocalVersion = useProjectStore.getState().localVersion
           const currentSyncStatus = useProjectStore.getState().syncStatus
@@ -363,6 +373,8 @@ export function useGraphSync({ enabled = true }: UseGraphSyncOptions = {}): UseG
 
       if (error) throw error
 
+      const newSnapshotData = newSnapshot as { version: number }
+
       // Update local state with merged/kept data
       if (resolution === 'merge') {
         const merged = mergeGraphs(conflictData.localGraph, conflictData.remoteGraph)
@@ -384,16 +396,16 @@ export function useGraphSync({ enabled = true }: UseGraphSyncOptions = {}): UseG
             })),
             gaps: merged.gaps,
           },
-          newSnapshot.version
+          newSnapshotData.version
         )
       } else {
-        setLocalVersion(newSnapshot.version)
+        setLocalVersion(newSnapshotData.version)
       }
 
       setConflictData(null)
       setSyncStatus('saved')
       setTimeout(() => setSyncStatus('idle'), 2000)
-    } catch (error) {
+    } catch {
       setSyncStatus('error')
     }
   }, [conflictData, currentProject, buildGraphData, mergeGraphs, setGraphFromRemote, setLocalVersion, setConflictData, setSyncStatus])
