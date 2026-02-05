@@ -32,7 +32,7 @@ export function ConflictDialog({ conflictData, onResolve }: ConflictDialogProps)
 
   return (
     <Dialog open={!!conflictData} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -44,17 +44,17 @@ export function ConflictDialog({ conflictData, onResolve }: ConflictDialogProps)
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-4 py-4">
-          <div className="rounded-lg border p-3 bg-muted/30">
+          <div className="rounded-lg border p-4 bg-muted/30">
             <p className="text-sm font-medium mb-2">Deine Version (v{conflictData.localVersion})</p>
-            <ul className="text-xs text-muted-foreground space-y-1">
+            <ul className="text-sm text-muted-foreground space-y-1">
               <li>{localStats.nodes} Nodes</li>
               <li>{localStats.edges} Verbindungen</li>
               <li>{localStats.gaps} offene Gaps</li>
             </ul>
           </div>
-          <div className="rounded-lg border p-3 bg-muted/30">
+          <div className="rounded-lg border p-4 bg-muted/30">
             <p className="text-sm font-medium mb-2">Serverversion (v{conflictData.remoteVersion})</p>
-            <ul className="text-xs text-muted-foreground space-y-1">
+            <ul className="text-sm text-muted-foreground space-y-1">
               <li>{remoteStats.nodes} Nodes</li>
               <li>{remoteStats.edges} Verbindungen</li>
               <li>{remoteStats.gaps} offene Gaps</li>
@@ -62,7 +62,7 @@ export function ConflictDialog({ conflictData, onResolve }: ConflictDialogProps)
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:justify-between">
           <Button
             variant="outline"
             onClick={() => onResolve('keep_local')}
