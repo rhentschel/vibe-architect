@@ -23,7 +23,9 @@ import {
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useProjects, useCreateProject, useLoadProject, useDeleteProject } from '@/hooks/useProjectData'
 import { useProjectRole } from '@/hooks/useProjectMembers'
+import { useGraphSync } from '@/hooks/useGraphSync'
 import { useProjectStore } from '@/lib/store/useProjectStore'
+import { ConflictDialog } from '@/components/features/sync/ConflictDialog'
 
 export default function App() {
   const { user, signOut } = useAuth()
@@ -37,6 +39,9 @@ export default function App() {
   const [newProjectDescription, setNewProjectDescription] = useState('')
 
   const { currentProject } = useProjectStore()
+  const { syncStatus, conflictData, resolveConflict } = useGraphSync({
+    enabled: !!currentProject,
+  })
   const { data: userRole } = useProjectRole(currentProject?.id, user?.id)
   const isOwner = !currentProject || userRole === 'owner' || currentProject.user_id === user?.id
   const { data: projects = [], isLoading: projectsLoading } = useProjects(user?.id)
@@ -82,6 +87,7 @@ export default function App() {
         userName={user?.email}
         isOwner={isOwner}
         sidebarOpen={sidebarOpen}
+        syncStatus={syncStatus}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -237,6 +243,8 @@ export default function App() {
           projectName={currentProject.name}
         />
       )}
+
+      <ConflictDialog conflictData={conflictData} onResolve={resolveConflict} />
     </div>
   )
 }

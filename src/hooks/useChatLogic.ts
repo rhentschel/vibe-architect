@@ -140,29 +140,7 @@ export function useChatLogic() {
           }
         }
 
-        // Save snapshot with fresh state
-        const freshState = useProjectStore.getState()
-        const graphData = {
-          nodes: freshState.nodes.map((n) => ({
-            id: n.id,
-            type: n.type,
-            label: n.data.label,
-            description: n.data.description,
-            position: n.position,
-          })),
-          edges: freshState.edges.map((e) => ({
-            id: e.id,
-            source: e.source,
-            target: e.target,
-            label: e.label,
-          })),
-          gaps: freshState.gaps,
-        }
-
-        await supabase.from('architecture_snapshots').insert({
-          project_id: currentProject.id,
-          graph_data: graphData,
-        } as never)
+        // Auto-save handles snapshot persistence via useGraphSync hook
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Ein Fehler ist aufgetreten'

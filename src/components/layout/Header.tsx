@@ -1,6 +1,8 @@
 import { LogOut, Plus, FolderOpen, Settings, FileText, Users, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectStore } from '@/lib/store/useProjectStore'
+import { SyncStatusIndicator } from '@/components/features/sync/SyncStatusIndicator'
+import type { SyncStatus } from '@/types/sync.types'
 
 interface HeaderProps {
   onMenuToggle: () => void
@@ -13,9 +15,10 @@ interface HeaderProps {
   userName?: string
   isOwner?: boolean
   sidebarOpen?: boolean
+  syncStatus?: SyncStatus
 }
 
-export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings, onGuestManagement, onExportPRD, onLogout, userName, isOwner = true, sidebarOpen = false }: HeaderProps) {
+export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings, onGuestManagement, onExportPRD, onLogout, userName, isOwner = true, sidebarOpen = false, syncStatus }: HeaderProps) {
   const { currentProject, nodes } = useProjectStore()
 
   return (
@@ -33,6 +36,7 @@ export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings,
             <span className="text-foreground/80 font-medium truncate max-w-[200px]">
               {currentProject.name}
             </span>
+            {syncStatus && <SyncStatusIndicator status={syncStatus} />}
           </div>
         )}
       </div>

@@ -50,7 +50,7 @@ interface SnapshotData {
 }
 
 export function useLoadProject() {
-  const { setCurrentProject, setMessages, setGraph, reset } = useProjectStore()
+  const { setCurrentProject, setMessages, setGraph, setLocalVersion, reset } = useProjectStore()
 
   return useMutation({
     mutationFn: async (projectId: string) => {
@@ -71,7 +71,7 @@ export function useLoadProject() {
       return {
         project: projectResult.data as Project,
         messages: (messagesResult.data || []) as Message[],
-        snapshot: snapshotResult.data as SnapshotData | null,
+        snapshot: snapshotResult.data as (SnapshotData & { version?: number }) | null,
       }
     },
     onSuccess: ({ project, messages, snapshot }) => {
@@ -81,6 +81,7 @@ export function useLoadProject() {
       if (snapshot?.graph_data) {
         setGraph(snapshot.graph_data)
       }
+      setLocalVersion(snapshot?.version ?? 0)
     },
   })
 }
