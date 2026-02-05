@@ -26,7 +26,8 @@ export function useProjects(userId: string | undefined) {
 
       if (memberError) throw memberError
 
-      const memberProjectIds = memberships?.map((m) => m.project_id) || []
+      const membershipData = memberships as { project_id: string }[] | null
+      const memberProjectIds = membershipData?.map((m) => m.project_id) || []
 
       let sharedProjects: Project[] = []
       if (memberProjectIds.length > 0) {
