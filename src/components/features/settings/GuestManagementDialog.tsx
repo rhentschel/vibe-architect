@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2, Users, Loader2, Copy, Check, Link } from 'lucide-react'
+import { Trash2, Users, Loader2, UserPlus, Eye, EyeOff } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { useProjectMembers, useRemoveGuest } from '@/hooks/useProjectMembers'
+import { useProjectMembers, useRemoveGuest, useCreateGuestUser } from '@/hooks/useProjectMembers'
 
 interface GuestManagementDialogProps {
   open: boolean
@@ -27,21 +27,47 @@ export function GuestManagementDialog({
   projectId,
   projectName,
 }: GuestManagementDialogProps) {
-  const [copied, setCopied] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const { data: members = [], isLoading } = useProjectMembers(projectId)
   const removeGuest = useRemoveGuest()
+  const createGuestUser = useCreateGuestUser()
 
-  // Generate a shareable link (in production, this would be a proper invite link)
-  const shareLink = `${window.location.origin}?project=${projectId}`
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSuccessMessage(null)
 
-  const handleCopyLink = async () => {
+    if (!email.trim() || !password.trim()) {
+      setError('E-Mail und Passwort sind erforderlich')
+      return
+    }
+
+    if (password.length < 6) {
+      setError('Passwort muss mindestens 6 Zeichen haben')
+      return
+    }
+
     try {
-      await navigator.clipboard.writeText(shareLink)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      const result = await createGuestUser.mutateAsync({
+        email: email.trim(),
+        password,
+        projectId,
+        invitedBy: projectId, // The owner's session handles auth
+      })
+
+      setSuccessMessage(result.message)
+      setEmail('')
+      setPassword('')
+
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err) {
-      console.error('Failed to copy:', err)
+      setError(err instanceof Error ? err.message : 'Fehler beim Erstellen des Benutzers')
     }
   }
 
@@ -60,45 +86,76 @@ export function GuestManagementDialog({
             Gäste verwalten
           </DialogTitle>
           <DialogDescription>
-            Teile den Link, um Gäste zu "{projectName}" einzuladen.
-            Gäste können alles sehen und bearbeiten, aber keine Einstellungen ändern.
+            Erstelle Benutzerkonten und füge sie als Gäste zu "{projectName}" hinzu.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Share Link */}
-          <div className="space-y-2">
+          {/* Create User Form */}
+          <form onSubmit={handleCreateUser} className="space-y-3">
             <label className="text-sm font-medium flex items-center gap-2">
-              <Link className="h-4 w-4" />
-              Einladungslink
+              <UserPlus className="h-4 w-4" />
+              Neuen Gast einladen
             </label>
-            <div className="flex gap-2">
+            <div className="space-y-2">
               <Input
-                value={shareLink}
-                readOnly
-                className="text-xs"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="E-Mail-Adresse"
+                disabled={createGuestUser.isPending}
               />
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Passwort (min. 6 Zeichen)"
+                  disabled={createGuestUser.isPending}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
               <Button
-                onClick={handleCopyLink}
-                variant="outline"
-                size="icon"
-                className="shrink-0"
+                type="submit"
+                className="w-full"
+                disabled={createGuestUser.isPending || !email.trim() || !password.trim()}
               >
-                {copied ? (
-                  <Check className="h-4 w-4 text-green-500" />
+                {createGuestUser.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Erstelle...
+                  </>
                 ) : (
-                  <Copy className="h-4 w-4" />
+                  <>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Benutzer erstellen & einladen
+                  </>
                 )}
               </Button>
             </div>
+            {error && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
+            {successMessage && (
+              <p className="text-sm text-green-600">{successMessage}</p>
+            )}
             <p className="text-xs text-muted-foreground">
-              Teile diesen Link mit Personen, die Zugriff auf das Projekt haben sollen.
-              Sie müssen sich zuerst registrieren.
+              Der Benutzer kann sich direkt mit diesen Zugangsdaten anmelden.
             </p>
-          </div>
+          </form>
 
           {/* Members List */}
-          <div className="space-y-2">
+          <div className="space-y-2 pt-2 border-t">
             <label className="text-sm font-medium">
               Aktuelle Gäste ({members.filter(m => m.role === 'guest').length})
             </label>

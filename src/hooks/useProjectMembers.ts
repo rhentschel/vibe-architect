@@ -2,6 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { ProjectMember, ProjectRole } from '@/types/database.types'
 
+interface CreateUserResponse {
+  success: boolean
+  userId: string
+  email: string
+  isNewUser: boolean
+  message: string
+}
+
 interface ProjectUserData {
   user_id: string
 }
@@ -144,6 +152,41 @@ export function useRemoveGuest() {
         .eq('id', memberId)
 
       if (error) throw error
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ['project-members', projectId] })
+    },
+  })
+}
+
+export function useCreateGuestUser() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      email,
+      password,
+      projectId,
+      invitedBy,
+    }: {
+      email: string
+      password: string
+      projectId: string
+      invitedBy: string
+    }): Promise<CreateUserResponse> => {
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: { email, password, projectId, invitedBy },
+      })
+
+      if (error) {
+        throw new Error(error.message || 'Fehler beim Erstellen des Benutzers')
+      }
+
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      return data as CreateUserResponse
     },
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ['project-members', projectId] })

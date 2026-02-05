@@ -9,14 +9,47 @@ export function useProjects(userId: string | undefined) {
     queryFn: async () => {
       if (!userId) return []
 
-      const { data, error } = await supabase
+      // Fetch owned projects
+      const { data: ownedProjects, error: ownedError } = await supabase
         .from('projects')
         .select('*')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
 
-      if (error) throw error
-      return data as Project[]
+      if (ownedError) throw ownedError
+
+      // Fetch projects where user is a member (guest)
+      const { data: memberships, error: memberError } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('user_id', userId)
+
+      if (memberError) throw memberError
+
+      const memberProjectIds = memberships?.map((m) => m.project_id) || []
+
+      let sharedProjects: Project[] = []
+      if (memberProjectIds.length > 0) {
+        const { data: shared, error: sharedError } = await supabase
+          .from('projects')
+          .select('*')
+          .in('id', memberProjectIds)
+          .order('updated_at', { ascending: false })
+
+        if (sharedError) throw sharedError
+        sharedProjects = (shared || []) as Project[]
+      }
+
+      // Combine and dedupe (in case of overlap)
+      const allProjects = [...(ownedProjects || []), ...sharedProjects] as Project[]
+      const uniqueProjects = allProjects.filter(
+        (project, index, self) => index === self.findIndex((p) => p.id === project.id)
+      )
+
+      // Sort by updated_at
+      return uniqueProjects.sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      )
     },
     enabled: !!userId,
   })
