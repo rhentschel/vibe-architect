@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { useProjectMembers, useRemoveGuest, useCreateGuestUser } from '@/hooks/useProjectMembers'
+import { useAuth } from '@/components/providers/AuthProvider'
 
 interface GuestManagementDialogProps {
   open: boolean
@@ -33,6 +34,7 @@ export function GuestManagementDialog({
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
+  const { user } = useAuth()
   const { data: members = [], isLoading } = useProjectMembers(projectId)
   const removeGuest = useRemoveGuest()
   const createGuestUser = useCreateGuestUser()
@@ -57,7 +59,7 @@ export function GuestManagementDialog({
         email: email.trim(),
         password,
         projectId,
-        invitedBy: projectId, // The owner's session handles auth
+        invitedBy: user!.id,
       })
 
       setSuccessMessage(result.message)
