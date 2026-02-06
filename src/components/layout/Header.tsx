@@ -1,8 +1,15 @@
-import { LogOut, Plus, FolderOpen, Settings, FileText, Users, AlertTriangle } from 'lucide-react'
+import { LogOut, Plus, FolderOpen, Settings, FileText, Users, AlertTriangle, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 import { SyncStatusIndicator } from '@/components/features/sync/SyncStatusIndicator'
 import type { SyncStatus } from '@/types/sync.types'
+import type { Project } from '@/types/database.types'
 
 interface HeaderProps {
   onMenuToggle: () => void
@@ -14,11 +21,14 @@ interface HeaderProps {
   onLogout: () => void
   userName?: string
   isOwner?: boolean
+  isGlobalGuest?: boolean
+  guestProjects?: Project[]
+  onSwitchProject?: (projectId: string) => void
   sidebarOpen?: boolean
   syncStatus?: SyncStatus
 }
 
-export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings, onGuestManagement, onExportPRD, onLogout, userName, isOwner = true, sidebarOpen = false, syncStatus }: HeaderProps) {
+export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings, onGuestManagement, onExportPRD, onLogout, userName, isOwner = true, isGlobalGuest = false, guestProjects = [], onSwitchProject, sidebarOpen = false, syncStatus }: HeaderProps) {
   const { currentProject, nodes } = useProjectStore()
 
   return (
@@ -42,16 +52,18 @@ export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings,
       </div>
 
       <div className="flex items-center gap-1.5">
-        <Button
-          variant="default"
-          size="sm"
-          onClick={onNewProject}
-          className="rounded-lg px-4 shadow-sm"
-        >
-          <Plus className="mr-1.5 h-4 w-4" />
-          <span className="hidden sm:inline">Neues Projekt</span>
-        </Button>
-        {nodes.length > 0 && onExportPRD && (
+        {!isGlobalGuest && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onNewProject}
+            className="rounded-lg px-4 shadow-sm"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            <span className="hidden sm:inline">Neues Projekt</span>
+          </Button>
+        )}
+        {!isGlobalGuest && nodes.length > 0 && onExportPRD && (
           <Button
             variant="outline"
             size="sm"
@@ -63,10 +75,33 @@ export function Header({ onMenuToggle, onNewProject, onOpenProjects, onSettings,
           </Button>
         )}
         <div className="w-px h-6 bg-border/50 mx-1 hidden sm:block" />
-        <Button variant="ghost" size="sm" onClick={onOpenProjects} className="rounded-lg">
-          <FolderOpen className="mr-1.5 h-4 w-4" />
-          <span className="hidden sm:inline">Projekte</span>
-        </Button>
+        {isGlobalGuest && guestProjects.length > 1 && onSwitchProject ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="rounded-lg">
+                <FolderOpen className="mr-1.5 h-4 w-4" />
+                <span className="hidden sm:inline">Projekte</span>
+                <ChevronDown className="ml-1 h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {guestProjects.map((project) => (
+                <DropdownMenuItem
+                  key={project.id}
+                  onClick={() => onSwitchProject(project.id)}
+                  className={currentProject?.id === project.id ? 'bg-accent' : ''}
+                >
+                  {project.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : !isGlobalGuest ? (
+          <Button variant="ghost" size="sm" onClick={onOpenProjects} className="rounded-lg">
+            <FolderOpen className="mr-1.5 h-4 w-4" />
+            <span className="hidden sm:inline">Projekte</span>
+          </Button>
+        ) : null}
         <Button
           variant={sidebarOpen ? "secondary" : "ghost"}
           size="sm"

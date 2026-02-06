@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ReactFlowProvider } from 'reactflow'
 import { Trash2 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
@@ -24,6 +24,7 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { useProjects, useCreateProject, useLoadProject, useDeleteProject } from '@/hooks/useProjectData'
 import { useProjectRole } from '@/hooks/useProjectMembers'
 import { useGraphSync } from '@/hooks/useGraphSync'
+import { useUserRole } from '@/hooks/useUserRole'
 import { useProjectStore } from '@/lib/store/useProjectStore'
 import { ConflictDialog } from '@/components/features/sync/ConflictDialog'
 
@@ -44,10 +45,20 @@ export default function App() {
   })
   const { data: userRole } = useProjectRole(currentProject?.id, user?.id)
   const isOwner = !currentProject || userRole === 'owner' || currentProject.user_id === user?.id
+  const { isGuest: isGlobalGuest, guestProjects, isLoading: roleLoading } = useUserRole()
   const { data: projects = [], isLoading: projectsLoading } = useProjects(user?.id)
   const createProject = useCreateProject()
   const loadProject = useLoadProject()
   const deleteProject = useDeleteProject()
+  const guestRedirectDone = useRef(false)
+
+  // Auto-redirect: when guest has no project loaded, load first guest project
+  useEffect(() => {
+    if (isGlobalGuest && !currentProject && guestProjects.length > 0 && !guestRedirectDone.current) {
+      guestRedirectDone.current = true
+      loadProject.mutateAsync(guestProjects[0].id)
+    }
+  }, [isGlobalGuest, currentProject, guestProjects, loadProject])
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim() || !user) return
@@ -78,14 +89,17 @@ export default function App() {
     <div className="flex h-screen flex-col">
       <Header
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-        onNewProject={() => setShowNewProjectDialog(true)}
-        onOpenProjects={() => setShowProjectsDialog(true)}
+        onNewProject={() => { if (!isGlobalGuest) setShowNewProjectDialog(true) }}
+        onOpenProjects={() => { if (!isGlobalGuest) setShowProjectsDialog(true) }}
         onSettings={() => setShowSettingsDialog(true)}
         onGuestManagement={() => setShowGuestDialog(true)}
         onExportPRD={() => setShowExportDialog(true)}
         onLogout={signOut}
         userName={user?.email}
         isOwner={isOwner}
+        isGlobalGuest={isGlobalGuest}
+        guestProjects={guestProjects}
+        onSwitchProject={(projectId) => loadProject.mutateAsync(projectId)}
         sidebarOpen={sidebarOpen}
         syncStatus={syncStatus}
       />
@@ -103,6 +117,13 @@ export default function App() {
                 }
               />
             </ReactFlowProvider>
+          ) : isGlobalGuest || roleLoading ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+                <p className="mt-4 text-muted-foreground">Projekt wird geladen...</p>
+              </div>
+            </div>
           ) : (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2, Users, Loader2, UserPlus, Eye, EyeOff } from 'lucide-react'
+import { Trash2, Users, Loader2, UserPlus, Eye, EyeOff, UserCheck } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { useProjectMembers, useRemoveGuest, useCreateGuestUser } from '@/hooks/useProjectMembers'
+import { useProjectMembers, useRemoveGuest, useCreateGuestUser, useKnownGuests, useAssignGuestToProject } from '@/hooks/useProjectMembers'
 import { useAuth } from '@/components/providers/AuthProvider'
 
 interface GuestManagementDialogProps {
@@ -33,11 +33,16 @@ export function GuestManagementDialog({
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [selectedGuestId, setSelectedGuestId] = useState('')
+  const [assignError, setAssignError] = useState<string | null>(null)
+  const [assignSuccess, setAssignSuccess] = useState<string | null>(null)
 
   const { user } = useAuth()
   const { data: members = [], isLoading } = useProjectMembers(projectId)
   const removeGuest = useRemoveGuest()
   const createGuestUser = useCreateGuestUser()
+  const { data: knownGuests = [] } = useKnownGuests(projectId, user?.id)
+  const assignGuest = useAssignGuestToProject()
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,6 +81,26 @@ export function GuestManagementDialog({
   const handleRemove = async (memberId: string) => {
     if (confirm('Möchtest du diesen Gast wirklich entfernen?')) {
       await removeGuest.mutateAsync({ memberId, projectId })
+    }
+  }
+
+  const handleAssignGuest = async () => {
+    if (!selectedGuestId || !user) return
+    setAssignError(null)
+    setAssignSuccess(null)
+
+    try {
+      await assignGuest.mutateAsync({
+        projectId,
+        guestUserId: selectedGuestId,
+        invitedBy: user.id,
+      })
+      const guest = knownGuests.find((g) => g.user_id === selectedGuestId)
+      setAssignSuccess(`${guest?.email ?? 'Gast'} wurde dem Projekt zugewiesen.`)
+      setSelectedGuestId('')
+      setTimeout(() => setAssignSuccess(null), 5000)
+    } catch (err) {
+      setAssignError(err instanceof Error ? err.message : 'Fehler beim Zuweisen')
     }
   }
 
@@ -155,6 +180,49 @@ export function GuestManagementDialog({
               Der Benutzer kann sich direkt mit diesen Zugangsdaten anmelden.
             </p>
           </form>
+
+          {/* Assign Existing Guest */}
+          {knownGuests.length > 0 && (
+            <div className="space-y-3 pt-2 border-t">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <UserCheck className="h-4 w-4" />
+                Bestehenden Gast zuweisen
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={selectedGuestId}
+                  onChange={(e) => setSelectedGuestId(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  disabled={assignGuest.isPending}
+                >
+                  <option value="">Gast auswählen...</option>
+                  {knownGuests.map((guest) => (
+                    <option key={guest.user_id} value={guest.user_id}>
+                      {guest.email}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  onClick={handleAssignGuest}
+                  disabled={!selectedGuestId || assignGuest.isPending}
+                  size="sm"
+                  className="shrink-0"
+                >
+                  {assignGuest.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Zuweisen'
+                  )}
+                </Button>
+              </div>
+              {assignError && (
+                <p className="text-sm text-destructive">{assignError}</p>
+              )}
+              {assignSuccess && (
+                <p className="text-sm text-green-600">{assignSuccess}</p>
+              )}
+            </div>
+          )}
 
           {/* Members List */}
           <div className="space-y-2 pt-2 border-t">

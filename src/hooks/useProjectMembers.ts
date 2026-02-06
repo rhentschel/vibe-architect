@@ -159,6 +159,103 @@ export function useRemoveGuest() {
   })
 }
 
+export function useAssignGuestToProject() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      guestUserId,
+      invitedBy,
+    }: {
+      projectId: string
+      guestUserId: string
+      invitedBy: string
+    }) => {
+      const { data, error } = await supabase
+        .from('project_members')
+        .insert({
+          project_id: projectId,
+          user_id: guestUserId,
+          role: 'guest',
+          invited_by: invitedBy,
+        } as never)
+        .select()
+        .single()
+
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error('Dieser Gast ist bereits in diesem Projekt.')
+        }
+        throw error
+      }
+
+      return data as ProjectMember
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ['project-members', projectId] })
+    },
+  })
+}
+
+export function useKnownGuests(currentProjectId: string | undefined, adminUserId: string | undefined) {
+  return useQuery({
+    queryKey: ['known-guests', adminUserId, currentProjectId],
+    queryFn: async () => {
+      if (!adminUserId || !currentProjectId) return []
+
+      // Get all projects owned by this admin
+      const { data: ownedProjects, error: projectsError } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('user_id', adminUserId)
+
+      if (projectsError) throw projectsError
+
+      const projectIds = (ownedProjects || []).map((p: { id: string }) => p.id)
+      if (projectIds.length === 0) return []
+
+      // Get all guest members across all admin's projects
+      const { data: allMembers, error: membersError } = await supabase
+        .from('project_members')
+        .select('user_id, email')
+        .in('project_id', projectIds)
+        .eq('role', 'guest')
+
+      if (membersError) throw membersError
+
+      // Get members already in the current project
+      const { data: currentMembers, error: currentError } = await supabase
+        .from('project_members')
+        .select('user_id')
+        .eq('project_id', currentProjectId)
+
+      if (currentError) throw currentError
+
+      const currentMemberIds = new Set(
+        (currentMembers || []).map((m: { user_id: string }) => m.user_id)
+      )
+
+      // Deduplicate and filter out already-assigned guests
+      const seen = new Set<string>()
+      const availableGuests: { user_id: string; email: string }[] = []
+
+      for (const member of (allMembers || []) as { user_id: string; email?: string }[]) {
+        if (!currentMemberIds.has(member.user_id) && !seen.has(member.user_id)) {
+          seen.add(member.user_id)
+          availableGuests.push({
+            user_id: member.user_id,
+            email: member.email || `Gast ${member.user_id.slice(0, 8)}`,
+          })
+        }
+      }
+
+      return availableGuests
+    },
+    enabled: !!currentProjectId && !!adminUserId,
+  })
+}
+
 export function useCreateGuestUser() {
   const queryClient = useQueryClient()
 
